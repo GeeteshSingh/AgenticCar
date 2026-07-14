@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "test": "node --no-warnings --experimental-loader ./alias-loader.mjs ./spawn-safety.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

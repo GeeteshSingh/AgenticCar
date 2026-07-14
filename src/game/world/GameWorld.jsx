@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { EndlessHighway } from '@/game/world/EndlessHighway'
 import { PlayerCar } from '@/game/player/PlayerCar'
 import { CameraManager } from '@/game/camera/CameraManager'
+import { TrafficManager } from '@/game/traffic/TrafficManager'
 import { useArcadeVehicleController } from '@/game/player/useArcadeVehicleController'
 import { useKeyboardInput } from '@/game/input/useKeyboardInput'
 import { useGameStore } from '@/stores/useGameStore'
@@ -31,6 +32,16 @@ export function GameWorld() {
   // Throttle HUD stat writes (~10/sec)
   const statAccumRef = useRef(0)
   const distanceRef = useRef(0)
+  const survivalRef = useRef(0)
+  // Bumped on each fresh run so TrafficManager resets its pool deterministically
+  const runTokenRef = useRef(0)
+  const prevPhaseRef = useRef(phase)
+  if (prevPhaseRef.current !== 'playing' && phase === 'playing') {
+    runTokenRef.current += 1
+    distanceRef.current = 0
+    survivalRef.current = 0
+  }
+  prevPhaseRef.current = phase
 
   const day = ENVIRONMENT.day
 
@@ -47,6 +58,7 @@ export function GameWorld() {
 
       // Advance virtual distance (meters) from speed
       distanceRef.current += Math.max(0, s.speed) * KMH_TO_MS * dt
+      survivalRef.current += dt
       // Highway scrolls visually with speed (m/s), car is at z=0
       scrollRef.current = Math.max(0, s.speed) * KMH_TO_MS
 
@@ -58,6 +70,7 @@ export function GameWorld() {
           score: Math.floor(distanceRef.current * 2),
           speedKmh: s.speed,
           distanceMeters: distanceRef.current,
+          survivalTime: survivalRef.current,
           integrity: 100,
         })
       }
@@ -88,6 +101,15 @@ export function GameWorld() {
       </mesh>
 
       <EndlessHighway scrollRef={scrollRef} />
+
+      {/* Traffic: pooled, recycled, lane-bound, safe-spawned */}
+      <TrafficManager
+        playerSpeedRef={stateRef}
+        distanceRef={distanceRef}
+        survivalRef={survivalRef}
+        active={running}
+        runToken={runTokenRef.current}
+      />
 
       {/* Player car + camera both read the same controller state ref */}
       <PlayerCar stateRef={stateRef} />
