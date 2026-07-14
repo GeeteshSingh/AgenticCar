@@ -10,15 +10,21 @@ export function ResultsScreen() {
   const distanceMeters = useGameStore((s) => s.distanceMeters)
   const survivalTime = useGameStore((s) => s.survivalTime)
   const speedKmh = useGameStore((s) => s.speedKmh)
+  const overtakes = useGameStore((s) => s.overtakes)
+  const nearMisses = useGameStore((s) => s.nearMisses)
+  const collisions = useGameStore((s) => s.collisions)
   const mode = useGameStore((s) => s.mode)
   const startRun = useGameStore((s) => s.startRun)
   const returnToMenu = useGameStore((s) => s.returnToMenu)
 
   const stats = [
-    ['Score', Math.round(score)],
+    ['Score', Math.round(score).toLocaleString()],
     ['Distance', `${(distanceMeters / 1000).toFixed(2)} km`],
     ['Survival', `${Math.floor(survivalTime)} s`],
     ['Top Speed', `${Math.round(speedKmh)} km/h`],
+    ['Overtakes', Math.round(overtakes)],
+    ['Near Misses', Math.round(nearMisses)],
+    ['Collisions', Math.round(collisions)],
   ]
 
   return (

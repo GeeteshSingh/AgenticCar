@@ -11,6 +11,10 @@ import { ENVIRONMENT } from '@/game/config/gameConfig'
 import { KMH_TO_MS, VEHICLE } from '@/game/config/vehicleConfig'
 import { createCollisionEffects } from '@/game/effects/useCollisionEffects'
 import { setCollisionFlash } from '@/game/effects/collisionSignal'
+import { createScoringManager } from '@/game/scoring/ScoringManager'
+import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
+import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
+import { createEventBus, GAME_EVENTS } from '@/game/events/gameEvents'
 
 // Live 3D scene for Phase 2. The player car stays near z=0; the highway
 // scrolls toward it. All high-frequency simulation runs here via refs in the
@@ -38,6 +42,13 @@ export function GameWorld() {
   const cooldownRef = useRef(0) // seconds of post-collision invulnerability
   const destroyRef = useRef(false) // latch so finishRun fires once
 
+  // Scoring (Phase 5): manager + detectors + event bus, all ref-based.
+  const scoringRef = useRef(createScoringManager())
+  const overtakeDetRef = useRef(createOvertakeDetector())
+  const nearMissDetRef = useRef(createNearMissDetector())
+  const eventBusRef = useRef(createEventBus())
+  const trafficVehiclesRef = useRef([])
+
   // Throttle HUD stat writes (~10/sec)
   const statAccumRef = useRef(0)
   const distanceRef = useRef(0)
@@ -54,6 +65,9 @@ export function GameWorld() {
     topSpeedRef.current = 0
     cooldownRef.current = 0
     destroyRef.current = false
+    scoringRef.current = createScoringManager()
+    overtakeDetRef.current = createOvertakeDetector()
+    nearMissDetRef.current = createNearMissDetector()
   }
   prevPhaseRef.current = phase
 
@@ -74,14 +88,19 @@ export function GameWorld() {
     } else {
       s.speed *= 0.85
     }
+    // Scoring: reset multiplier and count collision
+    scoringRef.current.onCollision()
+    overtakeDetRef.current.markCollided(assessment.vehicleId)
+    eventBusRef.current.emit({ type: GAME_EVENTS.COLLISION, vehicleId: assessment.vehicleId, severity: assessment.severity })
     if (integrityRef.current <= 0 && !destroyRef.current) {
       destroyRef.current = true
       // brief slow-mo already achieved by speed bleed; transition to results
+      const snap = scoringRef.current.snapshot()
       finishRun({
-        score: Math.floor(distanceRef.current * 2),
-        distanceMeters: distanceRef.current,
+        score: snap.score,
+        distanceMeters: snap.distanceMeters,
         survivalTime: survivalRef.current,
-        speedKmh: topSpeedRef.current,
+        speedKmh: snap.topSpeed,
       })
     }
   }
@@ -108,9 +127,25 @@ export function GameWorld() {
       const s = update(dt, actionsRef.current)
 
       // Advance virtual distance (meters) from speed
-      distanceRef.current += Math.max(0, s.speed) * KMH_TO_MS * dt
+      const dMeters = Math.max(0, s.speed) * KMH_TO_MS * dt
+      distanceRef.current += dMeters
       survivalRef.current += dt
       topSpeedRef.current = Math.max(topSpeedRef.current, s.speed)
+
+      // --- Scoring: distance, overtakes, near misses (events + detectors) ---
+      scoringRef.current.addDistance(dMeters, s.speed)
+      const vehicles = trafficVehiclesRef.current
+      const overtaken = overtakeDetRef.current.detect(0, vehicles)
+      for (const id of overtaken) {
+        scoringRef.current.addOvertake()
+        eventBusRef.current.emit({ type: GAME_EVENTS.VEHICLE_OVERTAKEN, vehicleId: id })
+      }
+      const misses = nearMissDetRef.current.detect({ playerX: s.lateralX, vehicles, playerSpeed: s.speed })
+      for (const m of misses) {
+        scoringRef.current.addNearMiss(m)
+        eventBusRef.current.emit({ type: GAME_EVENTS.NEAR_MISS, vehicleId: m.vehicleId, relativeSpeed: m.relativeSpeed, distance: m.distance })
+      }
+
       // Highway scrolls visually with speed (m/s), car is at z=0
       scrollRef.current = Math.max(0, s.speed) * KMH_TO_MS
 
@@ -127,12 +162,18 @@ export function GameWorld() {
       statAccumRef.current += dt
       if (statAccumRef.current >= 0.1) {
         statAccumRef.current = 0
+        const snap = scoringRef.current.snapshot()
         updateStats({
-          score: Math.floor(distanceRef.current * 2),
+          score: snap.score,
           speedKmh: s.speed,
-          distanceMeters: distanceRef.current,
+          distanceMeters: snap.distanceMeters,
           survivalTime: survivalRef.current,
           integrity: integrityRef.current,
+          multiplier: snap.multiplier,
+          overtakes: snap.overtakes,
+          nearMisses: snap.nearMisses,
+          collisions: snap.collisions,
+          topSpeed: snap.topSpeed,
         })
       }
     } else {
@@ -173,6 +214,7 @@ export function GameWorld() {
         runToken={runTokenRef.current}
         cooldownRef={cooldownRef}
         onCollision={handleCollision}
+        vehiclesRef={trafficVehiclesRef}
       />
 
       {/* Player car + camera both read the same controller state ref */}

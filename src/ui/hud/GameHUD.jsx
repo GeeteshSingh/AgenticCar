@@ -1,12 +1,14 @@
 import { useGameStore } from '@/stores/useGameStore'
 import { SpeedDisplay } from '@/ui/hud/SpeedDisplay'
+import { ScoreDisplay } from '@/ui/hud/ScoreDisplay'
 import { IntegrityDisplay } from '@/ui/hud/IntegrityDisplay'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 // DOM HUD overlay. Rendered above the R3F canvas while PLAYING or PAUSED.
-// Kept minimal: speed, distance, integrity, camera mode. Non-blocking
-// (pointer-events none) so it never covers road visibility.
+// Shows score + multiplier (top-left), speed (top-center), distance +
+// integrity (top-right), camera mode (bottom-left). Non-blocking so it never
+// covers road visibility.
 export function GameHUD() {
   const distanceMeters = useGameStore((s) => s.distanceMeters)
   const cameraMode = useGameStore((s) => s.cameraMode)
@@ -14,6 +16,10 @@ export function GameHUD() {
   return (
     <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
       <div className="flex justify-between items-start gap-2">
+        <div className="pointer-events-auto">
+          <ScoreDisplay />
+        </div>
+
         <Card className="bg-slate-900/70 border-slate-700 backdrop-blur-sm pointer-events-auto">
           <CardContent className="py-3 px-4">
             <SpeedDisplay />

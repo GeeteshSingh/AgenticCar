@@ -40,7 +40,9 @@ export function EndlessHighway({ scrollRef }) {
   )
 
   useFrame((_, dt) => {
-    const scrollSpeed = (scrollRef?.current ?? 0) * 0.1 // visual scale of speed
+    // scrollRef is in m/s (player speed). Use it 1:1 so the road visibly
+    // streams at speed; recycle segments once they pass behind the camera.
+    const scrollSpeed = scrollRef?.current ?? 0
     const g = groupRef.current
     if (!g) return
     for (let i = 0; i < g.children.length; i++) {
@@ -48,7 +50,7 @@ export function EndlessHighway({ scrollRef }) {
       seg.position.z -= scrollSpeed * dt
       // Recycle when fully behind the camera
       if (seg.position.z < -SEGMENT_LENGTH * 1.5) {
-        // Move to the front of the train
+        // Move to the front of the train (just ahead of the furthest segment)
         let maxZ = -Infinity
         for (let j = 0; j < g.children.length; j++) {
           maxZ = Math.max(maxZ, g.children[j].position.z)

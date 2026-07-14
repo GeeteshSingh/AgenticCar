@@ -25,6 +25,11 @@ export const useGameStore = create((set, get) => ({
   distanceMeters: 0,
   survivalTime: 0,
   integrity: 100,
+  multiplier: 1,
+  overtakes: 0,
+  nearMisses: 0,
+  collisions: 0,
+  topSpeed: 0,
   cameraMode: 'chase', // 'chase' | 'hood'
 
   // ---- Actions ----
@@ -41,6 +46,11 @@ export const useGameStore = create((set, get) => ({
       distanceMeters: 0,
       survivalTime: 0,
       integrity: 100,
+      multiplier: 1,
+      overtakes: 0,
+      nearMisses: 0,
+      collisions: 0,
+      topSpeed: 0,
       cameraMode: 'chase',
     }),
 
@@ -78,6 +88,11 @@ export const useGameStore = create((set, get) => ({
       distanceMeters: 0,
       survivalTime: 0,
       integrity: 100,
+      multiplier: 1,
+      overtakes: 0,
+      nearMisses: 0,
+      collisions: 0,
+      topSpeed: 0,
       cameraMode: 'chase',
     }),
 

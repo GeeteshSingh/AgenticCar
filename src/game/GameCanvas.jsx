@@ -13,7 +13,7 @@ export function GameCanvas() {
       gl={{ antialias: true }}
     >
       <color attach="background" args={['#0a0e17']} />
-      <fog attach="fog" args={['#0a0e17', 40, 180]} />
+      <fog attach="fog" args={['#0a0e17', 90, 320]} />
       <GameWorld />
     </Canvas>
   )
