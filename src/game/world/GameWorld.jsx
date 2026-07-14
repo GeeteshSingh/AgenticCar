@@ -1,25 +1,99 @@
-// Placeholder 3D world contents. During Phase 1 this renders an empty,
-// well-lit scene so the R3F pipeline is proven end-to-end. The recycled
-// endless highway, traffic, day/night cycle, and scenery are added in
-// later phases.
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { EndlessHighway } from '@/game/world/EndlessHighway'
+import { PlayerCar } from '@/game/player/PlayerCar'
+import { CameraManager } from '@/game/camera/CameraManager'
+import { useArcadeVehicleController } from '@/game/player/useArcadeVehicleController'
+import { useKeyboardInput } from '@/game/input/useKeyboardInput'
+import { useGameStore } from '@/stores/useGameStore'
+import { ENVIRONMENT } from '@/game/config/gameConfig'
+import { KMH_TO_MS } from '@/game/config/vehicleConfig'
+
+// Live 3D scene for Phase 2. The player car stays near z=0; the highway
+// scrolls toward it. All high-frequency simulation runs here via refs in the
+// render loop. React state is only touched for throttled HUD stats and the
+// camera-mode toggle.
 export function GameWorld() {
+  const phase = useGameStore((s) => s.phase)
+  const cameraMode = useGameStore((s) => s.cameraMode)
+  const toggleCameraMode = useGameStore((s) => s.toggleCameraMode)
+  const togglePause = useGameStore((s) => s.togglePause)
+  const updateStats = useGameStore((s) => s.updateStats)
+
+  const { actionsRef, consumeEdgeActions } = useKeyboardInput({ enabled: phase === 'playing' || phase === 'paused' })
+
+  const running = phase === 'playing'
+  const { stateRef, update } = useArcadeVehicleController(actionsRef, { active: running })
+
+  // Scroll value the highway reads (visual world speed in m/s)
+  const scrollRef = useRef(0)
+
+  // Throttle HUD stat writes (~10/sec)
+  const statAccumRef = useRef(0)
+  const distanceRef = useRef(0)
+
+  const day = ENVIRONMENT.day
+
+  useFrame((_, dt) => {
+    // Edge actions (camera / pause toggles)
+    const edges = consumeEdgeActions()
+    for (const e of edges) {
+      if (e === 'toggleCamera') toggleCameraMode()
+      else if (e === 'togglePause') togglePause()
+    }
+
+    if (running) {
+      const s = update(dt, actionsRef.current)
+
+      // Advance virtual distance (meters) from speed
+      distanceRef.current += Math.max(0, s.speed) * KMH_TO_MS * dt
+      // Highway scrolls visually with speed (m/s), car is at z=0
+      scrollRef.current = Math.max(0, s.speed) * KMH_TO_MS
+
+      // Throttled store update for HUD
+      statAccumRef.current += dt
+      if (statAccumRef.current >= 0.1) {
+        statAccumRef.current = 0
+        updateStats({
+          score: Math.floor(distanceRef.current * 2),
+          speedKmh: s.speed,
+          distanceMeters: distanceRef.current,
+          integrity: 100,
+        })
+      }
+    } else {
+      scrollRef.current = 0
+    }
+  })
+
   return (
     <group>
-      {/* Ambient + key light so later meshes are visible immediately */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={1.2} />
+      <ambientLight intensity={day.ambientIntensity} />
+      <directionalLight
+        position={day.sunPosition}
+        intensity={day.sunIntensity}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-60}
+        shadow-camera-right={60}
+        shadow-camera-top={60}
+        shadow-camera-bottom={-60}
+        shadow-camera-far={200}
+      />
 
-      {/* Ground plane placeholder (replaced by the endless highway later) */}
+      {/* Distant ground for context */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
-        <planeGeometry args={[200, 400]} />
-        <meshStandardMaterial color="#10151f" />
+        <planeGeometry args={[400, 1200]} />
+        <meshStandardMaterial color="#070b12" />
       </mesh>
 
-      {/* Reference marker for camera framing validation */}
-      <mesh position={[0, 0.5, -20]}>
-        <boxGeometry args={[2, 1, 4]} />
-        <meshStandardMaterial color="#22d3ee" />
-      </mesh>
+      <EndlessHighway scrollRef={scrollRef} />
+
+      {/* Player car + camera both read the same controller state ref */}
+      <PlayerCar stateRef={stateRef} />
+      <CameraManager targetRef={stateRef} cameraMode={cameraMode} />
+
+      {/* HUD overlay is DOM, rendered by AppShell/GameRouter separately */}
     </group>
   )
 }
