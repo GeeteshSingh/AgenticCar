@@ -5,6 +5,8 @@ import { GameCanvas } from '@/game/GameCanvas'
 import { MainMenu } from '@/ui/menus/MainMenu'
 import { GameHUD } from '@/ui/hud/GameHUD'
 import { PauseMenu } from '@/ui/pause/PauseMenu'
+import { ResultsScreen } from '@/ui/results/ResultsScreen'
+import { CollisionFlash } from '@/ui/effects/CollisionFlash'
 
 // Drives the transition from loading -> countdown -> playing once inside a
 // session. Phase 1 keeps the loading/countdown lightweight (timed state
@@ -45,8 +47,9 @@ function Session() {
   const phase = useGameStore((s) => s.phase)
 
   return (
-    <div className="h-screen w-screen relative">
+    <div className="h-screen w-screen relative overflow-hidden">
       <GameCanvas />
+      <CollisionFlash />
       {(phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED) && <GameHUD />}
       {phase === GAME_STATES.PAUSED && <PauseMenu />}
     </div>
@@ -63,22 +66,11 @@ export function GameRouter() {
   }
 
   if (phase === GAME_STATES.RESULTS) {
-    return <ResultsPlaceholder onMenu={returnToMenu} />
+    return <ResultsScreen />
   }
 
   // LOADING, COUNTDOWN, PLAYING, PAUSED all mount the canvas + overlays.
   return <LoadingGate>{<Session />}</LoadingGate>
-}
-
-function ResultsPlaceholder({ onMenu }) {
-  return (
-    <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-black text-red-400">RUN COMPLETE</h1>
-      <Button onClick={onMenu} className="bg-cyan-600 hover:bg-cyan-500">
-        Return to Menu
-      </Button>
-    </div>
-  )
 }
 
 export default GameRouter

@@ -20,12 +20,13 @@ export function TrafficVehicle({ vehicleRef }) {
   const l = vehicleRef?.length ?? 4
   const h = vehicleRef?.height ?? 1.4
   const color = vehicleRef?.color ?? '#ef4444'
+  const flashed = (vehicleRef?.flash ?? 0) > 0
 
   return (
     <group ref={groupRef}>
       <mesh castShadow position={[0, h / 2, 0]}>
         <boxGeometry args={[w, h * 0.55, l]} />
-        <meshStandardMaterial color={color} metalness={0.4} roughness={0.4} />
+        <meshStandardMaterial color={flashed ? '#ffffff' : color} emissive={flashed ? '#ffffff' : '#000000'} emissiveIntensity={flashed ? 0.8 : 0} metalness={0.4} roughness={0.4} />
       </mesh>
       <mesh castShadow position={[0, h * 0.85, -l * 0.04]}>
         <boxGeometry args={[w * 0.82, h * 0.5, l * 0.5]} />
