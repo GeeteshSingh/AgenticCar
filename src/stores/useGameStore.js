@@ -21,6 +21,7 @@ export const useGameStore = create((set, get) => ({
 
   // ---- Run stats (updated throttled, not per frame) ----
   score: 0,
+  speedKmh: 0,
   distanceMeters: 0,
   survivalTime: 0,
   integrity: 100,
@@ -36,6 +37,7 @@ export const useGameStore = create((set, get) => ({
       mode,
       phase: GAME_STATES.LOADING,
       score: 0,
+      speedKmh: 0,
       distanceMeters: 0,
       survivalTime: 0,
       integrity: 100,
@@ -72,6 +74,7 @@ export const useGameStore = create((set, get) => ({
       phase: GAME_STATES.MENU,
       mode: null,
       score: 0,
+      speedKmh: 0,
       distanceMeters: 0,
       survivalTime: 0,
       integrity: 100,
