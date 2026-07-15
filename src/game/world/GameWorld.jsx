@@ -15,6 +15,8 @@ import { createScoringManager } from '@/game/scoring/ScoringManager'
 import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
 import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
 import { createEventBus, GAME_EVENTS } from '@/game/events/gameEvents'
+import { createObjectiveManager } from '@/game/objectives/ObjectiveManager'
+import { Environment } from '@/game/environment/Environment'
 
 // Live 3D scene for Phase 2. The player car stays near z=0; the highway
 // scrolls toward it. All high-frequency simulation runs here via refs in the
@@ -48,6 +50,9 @@ export function GameWorld() {
   const nearMissDetRef = useRef(createNearMissDetector())
   const eventBusRef = useRef(createEventBus())
   const trafficVehiclesRef = useRef([])
+
+  // Objectives (Phase 6): mission sequential stages + endless challenges.
+  const objectiveRef = useRef(createObjectiveManager({ mode: phase === 'playing' ? 'endless' : 'endless' }))
 
   // Throttle HUD stat writes (~10/sec)
   const statAccumRef = useRef(0)
@@ -201,6 +206,9 @@ export function GameWorld() {
         <planeGeometry args={[400, 1200]} />
         <meshStandardMaterial color="#070b12" />
       </mesh>
+
+      {/* Sky, sun/moon disc, distant mountains */}
+      <Environment env={day} />
 
       <EndlessHighway scrollRef={scrollRef} />
 

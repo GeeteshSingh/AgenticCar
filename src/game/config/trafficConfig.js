@@ -3,8 +3,12 @@
 
 export const TRAFFIC = {
   // How far ahead (meters, +z) vehicles spawn and how far behind (-z) they
-  // despawn. Keep within the visible world.
+  // despawn. Keep within the visible world. Vehicles spawn at a randomized z
+  // within [spawnDistanceMin, spawnDistance] so the spawn-safety escape-lane
+  // check does not treat a fresh batch as an unavoidable wall and so the road
+  // feels alive instead of cars appearing in a single synchronized line.
   spawnDistance: 180,
+  spawnDistanceMin: 110,
   despawnDistance: -40,
 
   // Pool size caps simultaneous traffic regardless of difficulty.

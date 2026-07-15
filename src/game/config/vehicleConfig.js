@@ -11,6 +11,7 @@ export const VEHICLE = {
 
   // Speed limits (km/h)
   maxSpeed: 220,
+  cruiseSpeed: 120, // speed the car auto-drives toward when no boost input
   maxReverseSpeed: 18,
 
   // Longitudinal acceleration (km/h per second)

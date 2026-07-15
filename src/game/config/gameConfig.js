@@ -25,12 +25,12 @@ export const PHYSICS = {
 // Lighting / environment defaults (day baseline; day-night arrives Phase 7)
 export const ENVIRONMENT = {
   day: {
-    sunPosition: [40, 60, 20],
-    sunIntensity: 1.4,
-    ambientIntensity: 0.55,
-    skyColor: '#8fb8e8',
-    fogColor: '#9fb6d4',
-    fogNear: 60,
-    fogFar: 320,
+    sunPosition: [60, 90, 40],
+    sunIntensity: 2.0,
+    ambientIntensity: 0.85,
+    skyColor: '#7db8f0',
+    fogColor: '#bcd4ec',
+    fogNear: 220,
+    fogFar: 640,
   },
 }

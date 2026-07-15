@@ -12,8 +12,8 @@ export function GameCanvas() {
       camera={{ position: [0, 5, 12], fov: 60 }}
       gl={{ antialias: true }}
     >
-      <color attach="background" args={['#0a0e17']} />
-      <fog attach="fog" args={['#0a0e17', 90, 320]} />
+      <color attach="background" args={['#7db8f0']} />
+      <fog attach="fog" args={['#bcd4ec', 220, 640]} />
       <GameWorld />
     </Canvas>
   )

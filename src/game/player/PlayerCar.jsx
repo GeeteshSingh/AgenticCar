@@ -1,20 +1,18 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
 import { VEHICLE } from '@/game/config/vehicleConfig'
 
-// Primitive player vehicle. Visual only — position/rotation are driven by the
-// parent (GameWorld) from the controller's ref state each frame via props.
+// Clean, minimalist low-poly white sedan. Visual only — position/rotation are
+// driven each frame from the controller's ref state. Fresh paint + glass +
+// working headlights (front, +z) and tail-lights (rear, -z).
 export function PlayerCar({ stateRef }) {
   const groupRef = useRef()
 
   useFrame(() => {
     const s = stateRef?.current
     if (!groupRef.current || !s) return
-    // Lateral position and heading
     groupRef.current.position.x = s.lateralX
     groupRef.current.rotation.y = s.yaw
-    // Visual body roll/pitch
     groupRef.current.rotation.z = s.bodyRoll
     groupRef.current.rotation.x = s.bodyPitch
   })
@@ -26,40 +24,45 @@ export function PlayerCar({ stateRef }) {
 
   return (
     <group ref={groupRef}>
-      {/* Body */}
-      <mesh castShadow position={[0, H / 2, 0]}>
-        <boxGeometry args={[W, H * 0.55, L]} />
-        <meshStandardMaterial color="#22d3ee" metalness={0.6} roughness={0.25} />
+      {/* Body — sleek white */}
+      <mesh castShadow position={[0, H * 0.42, 0]}>
+        <boxGeometry args={[W, H * 0.5, L]} />
+        <meshStandardMaterial color="#f5f7fa" metalness={0.5} roughness={0.28} />
       </mesh>
-      {/* Cabin */}
-      <mesh castShadow position={[0, H * 0.85, -L * 0.05]}>
-        <boxGeometry args={[W * 0.85, H * 0.5, L * 0.5]} />
-        <meshStandardMaterial color="#0b1220" metalness={0.3} roughness={0.1} />
+      {/* Lower skirt for a cleaner wedge */}
+      <mesh castShadow position={[0, H * 0.2, 0]}>
+        <boxGeometry args={[W * 0.98, H * 0.28, L * 0.96]} />
+        <meshStandardMaterial color="#e5e8ee" metalness={0.4} roughness={0.4} />
       </mesh>
-      {/* Windshield highlight */}
-      <mesh position={[0, H * 0.85, L * 0.22]}>
-        <boxGeometry args={[W * 0.8, H * 0.4, L * 0.04]} />
-        <meshStandardMaterial color="#7dd3fc" transparent opacity={0.4} />
+      {/* Cabin / greenhouse */}
+      <mesh castShadow position={[0, H * 0.82, -L * 0.04]}>
+        <boxGeometry args={[W * 0.82, H * 0.5, L * 0.46]} />
+        <meshStandardMaterial color="#0b1220" metalness={0.2} roughness={0.08} />
+      </mesh>
+      {/* Windshield glass hint */}
+      <mesh position={[0, H * 0.82, L * 0.2]}>
+        <boxGeometry args={[W * 0.78, H * 0.42, L * 0.04]} />
+        <meshStandardMaterial color="#bae6fd" transparent opacity={0.35} metalness={0.1} roughness={0.05} />
       </mesh>
 
       {/* Headlights (front = +z) */}
-      <mesh position={[W * 0.3, H * 0.4, L / 2 + 0.01]}>
-        <boxGeometry args={[0.35, 0.2, 0.05]} />
-        <meshStandardMaterial color="#fef9c3" emissive="#fde047" emissiveIntensity={1.5} />
+      <mesh position={[W * 0.3, H * 0.4, L / 2 + 0.02]}>
+        <boxGeometry args={[0.4, 0.18, 0.05]} />
+        <meshStandardMaterial color="#fffbe6" emissive="#fde047" emissiveIntensity={1.6} />
       </mesh>
-      <mesh position={[-W * 0.3, H * 0.4, L / 2 + 0.01]}>
-        <boxGeometry args={[0.35, 0.2, 0.05]} />
-        <meshStandardMaterial color="#fef9c3" emissive="#fde047" emissiveIntensity={1.5} />
+      <mesh position={[-W * 0.3, H * 0.4, L / 2 + 0.02]}>
+        <boxGeometry args={[0.4, 0.18, 0.05]} />
+        <meshStandardMaterial color="#fffbe6" emissive="#fde047" emissiveIntensity={1.6} />
       </mesh>
 
-      {/* Brake/tail lights (rear = -z) */}
-      <mesh position={[W * 0.3, H * 0.4, -L / 2 - 0.01]}>
-        <boxGeometry args={[0.4, 0.18, 0.05]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.2} />
+      {/* Tail lights (rear = -z) */}
+      <mesh position={[W * 0.3, H * 0.42, -L / 2 - 0.02]}>
+        <boxGeometry args={[0.42, 0.16, 0.05]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.1} />
       </mesh>
-      <mesh position={[-W * 0.3, H * 0.4, -L / 2 - 0.01]}>
-        <boxGeometry args={[0.4, 0.18, 0.05]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.2} />
+      <mesh position={[-W * 0.3, H * 0.42, -L / 2 - 0.02]}>
+        <boxGeometry args={[0.42, 0.16, 0.05]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.1} />
       </mesh>
 
       {/* Wheels */}
@@ -70,12 +73,10 @@ export function PlayerCar({ stateRef }) {
         [-W / 2, R, -L * 0.32],
       ].map(([x, y, z], i) => (
         <mesh key={i} position={[x, y, z]} rotation={[0, 0, Math.PI / 2]} castShadow>
-          <cylinderGeometry args={[R, R, 0.3, 16]} />
-          <meshStandardMaterial color="#0a0a0a" roughness={0.8} />
+          <cylinderGeometry args={[R, R, 0.32, 16]} />
+          <meshStandardMaterial color="#0a0a0a" roughness={0.85} />
         </mesh>
       ))}
-
-      <pointLight position={[0, H, L / 2]} intensity={0} distance={0} color="#fde047" />
     </group>
   )
 }

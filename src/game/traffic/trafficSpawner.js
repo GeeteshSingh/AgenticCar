@@ -2,7 +2,7 @@
 // difficulty, then asks spawnSafety whether the spawn is fair. Pure-ish:
 // uses a provided RNG-free Math.random (acceptable) and reads config.
 
-import { TRAFFIC, laneCenterX } from '@/game/config/trafficConfig'
+import { TRAFFIC } from '@/game/config/trafficConfig'
 import { DIFFICULTY, lerp } from '@/game/config/difficultyConfig'
 import { pickSafeLane, buildLaneOccupancy } from '@/game/traffic/spawnSafety'
 
@@ -34,7 +34,8 @@ export function trySpawnVehicle({ activeVehicles, t, playerZ = 0 }) {
   const laneOccupancy = buildLaneOccupancy(activeVehicles)
   const type = pickType()
   const direction = TRAFFIC.laneDirections[Math.floor(Math.random() * TRAFFIC.laneDirections.length)] ?? 1
-  const candidateZ = TRAFFIC.spawnDistance
+  const candidateZ =
+    TRAFFIC.spawnDistanceMin + Math.random() * (TRAFFIC.spawnDistance - TRAFFIC.spawnDistanceMin)
 
   const lane = pickSafeLane({ candidateZ, length: type.length, laneOccupancy, playerZ })
   if (lane < 0) return null

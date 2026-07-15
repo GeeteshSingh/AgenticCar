@@ -10,7 +10,7 @@ export const DIFFICULTY = {
 
   // Traffic tuning interpolated by difficulty t in [0,1]
   traffic: {
-    baseSpawnInterval: 2.4, // seconds between groups at t=0
+    baseSpawnInterval: 1.6, // seconds between groups at t=0
     minSpawnInterval: 0.7, // at t=1
     sameDirectionSpeedMin: 60,
     sameDirectionSpeedMaxT0: 100,

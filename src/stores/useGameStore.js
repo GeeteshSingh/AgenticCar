@@ -30,6 +30,10 @@ export const useGameStore = create((set, get) => ({
   nearMisses: 0,
   collisions: 0,
   topSpeed: 0,
+  // Objective HUD snapshot (throttled)
+  activeObjective: null,
+  objectiveCompleted: 0,
+  objectiveTotal: 0,
   cameraMode: 'chase', // 'chase' | 'hood'
 
   // ---- Actions ----
@@ -51,6 +55,9 @@ export const useGameStore = create((set, get) => ({
       nearMisses: 0,
       collisions: 0,
       topSpeed: 0,
+      activeObjective: null,
+      objectiveCompleted: 0,
+      objectiveTotal: 0,
       cameraMode: 'chase',
     }),
 
@@ -93,6 +100,9 @@ export const useGameStore = create((set, get) => ({
       nearMisses: 0,
       collisions: 0,
       topSpeed: 0,
+      activeObjective: null,
+      objectiveCompleted: 0,
+      objectiveTotal: 0,
       cameraMode: 'chase',
     }),
 
