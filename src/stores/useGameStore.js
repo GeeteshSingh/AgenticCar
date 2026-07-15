@@ -34,6 +34,7 @@ export const useGameStore = create((set, get) => ({
   activeObjective: null,
   objectiveCompleted: 0,
   objectiveTotal: 0,
+  missionComplete: false,
   cameraMode: 'chase', // 'chase' | 'hood'
 
   // ---- Actions ----
@@ -58,6 +59,7 @@ export const useGameStore = create((set, get) => ({
       activeObjective: null,
       objectiveCompleted: 0,
       objectiveTotal: 0,
+      missionComplete: false,
       cameraMode: 'chase',
     }),
 
@@ -84,6 +86,7 @@ export const useGameStore = create((set, get) => ({
       phase: GAME_STATES.RESULTS,
       score: results?.score ?? get().score,
       distanceMeters: results?.distanceMeters ?? get().distanceMeters,
+      missionComplete: results?.missionComplete ?? false,
     }),
 
   returnToMenu: () =>
@@ -103,6 +106,7 @@ export const useGameStore = create((set, get) => ({
       activeObjective: null,
       objectiveCompleted: 0,
       objectiveTotal: 0,
+      missionComplete: false,
       cameraMode: 'chase',
     }),
 

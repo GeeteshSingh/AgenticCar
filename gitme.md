@@ -131,7 +131,7 @@ git push -u origin phase-9-optimization
 ## 4. Connect a remote and push `main`
 
 ```bash
-git remote add origin https://github.com/your-username/CarAgent.git
+git remote add origin https://github.com/geeteshsingh/CarAgent.git
 git push -u origin main
 ```
 

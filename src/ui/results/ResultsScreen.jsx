@@ -14,6 +14,7 @@ export function ResultsScreen() {
   const nearMisses = useGameStore((s) => s.nearMisses)
   const collisions = useGameStore((s) => s.collisions)
   const mode = useGameStore((s) => s.mode)
+  const missionComplete = useGameStore((s) => s.missionComplete)
   const startRun = useGameStore((s) => s.startRun)
   const returnToMenu = useGameStore((s) => s.returnToMenu)
 
@@ -30,8 +31,20 @@ export function ResultsScreen() {
   return (
     <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center p-4">
       <div className="text-center mb-8">
-        <h1 className="text-5xl font-black text-red-400 mb-2">RUN OVER</h1>
-        <p className="text-slate-400">{mode === 'mission' ? 'Mission ended' : 'Vehicle destroyed'}</p>
+        <h1
+          className={`text-5xl font-black mb-2 ${
+            missionComplete ? 'text-emerald-400' : 'text-red-400'
+          }`}
+        >
+          {missionComplete ? 'MISSION COMPLETE' : 'RUN OVER'}
+        </h1>
+        <p className="text-slate-400">
+          {missionComplete
+            ? 'All objectives finished'
+            : mode === 'mission'
+              ? 'Mission ended'
+              : 'Vehicle destroyed'}
+        </p>
       </div>
 
       <Card className="w-full max-w-sm bg-slate-900/90 border-slate-700">

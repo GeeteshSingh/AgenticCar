@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node --no-warnings --experimental-loader ./alias-loader.mjs ./spawn-safety.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./collision.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./scoring.test.mjs",
+    "test": "node --no-warnings --experimental-loader ./alias-loader.mjs ./spawn-safety.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./collision.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./scoring.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./objectives.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

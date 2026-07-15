@@ -41,6 +41,12 @@ export function createScoringManager() {
     state.multiplier = 1
   }
 
+  // Objective completion reward. Counted once by the ObjectiveManager; rolls
+  // into score exactly like any other scored event.
+  function addObjectiveReward(amount) {
+    state.score += amount
+  }
+
   function snapshot() {
     return {
       score: Math.floor(state.score),
@@ -59,6 +65,7 @@ export function createScoringManager() {
     addOvertake,
     addNearMiss,
     onCollision,
+    addObjectiveReward,
     snapshot,
     get score() {
       return Math.floor(state.score)

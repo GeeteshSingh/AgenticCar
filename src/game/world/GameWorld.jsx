@@ -52,10 +52,12 @@ export function GameWorld() {
   const trafficVehiclesRef = useRef([])
 
   // Objectives (Phase 6): mission sequential stages + endless challenges.
-  const objectiveRef = useRef(createObjectiveManager({ mode: phase === 'playing' ? 'endless' : 'endless' }))
+  const goalModeRef = useRef(null)
+  const objectiveRef = useRef(null)
 
   // Throttle HUD stat writes (~10/sec)
   const statAccumRef = useRef(0)
+  const objectiveAccumRef = useRef(0)
   const distanceRef = useRef(0)
   const survivalRef = useRef(0)
   const topSpeedRef = useRef(0)
@@ -73,6 +75,8 @@ export function GameWorld() {
     scoringRef.current = createScoringManager()
     overtakeDetRef.current = createOvertakeDetector()
     nearMissDetRef.current = createNearMissDetector()
+    goalModeRef.current = useGameStore.getState().mode || 'endless'
+    objectiveRef.current = createObjectiveManager({ mode: goalModeRef.current })
   }
   prevPhaseRef.current = phase
 
@@ -154,6 +158,45 @@ export function GameWorld() {
       // Highway scrolls visually with speed (m/s), car is at z=0
       scrollRef.current = Math.max(0, s.speed) * KMH_TO_MS
 
+      // --- Objectives (Phase 6): evaluate progress from the live stats
+      // snapshot. Mission mode ends the run once all stages complete. Endless
+      // mode rotates the active challenge on completion (run never ends).
+      const goal = objectiveRef.current
+      if (goal) {
+        const goalStats = {
+          distanceMeters: distanceRef.current,
+          survivalTime: survivalRef.current,
+          score: scoringRef.current.score,
+          speedKmh: s.speed,
+          integrity: integrityRef.current,
+          overtakes: scoringRef.current.state.overtakes,
+          nearMisses: scoringRef.current.state.nearMisses,
+          collisions: scoringRef.current.state.collisions,
+          topSpeed: topSpeedRef.current,
+        }
+        const { completed, missionComplete } = goal.update(goalStats, dt)
+        for (const obj of completed) {
+          scoringRef.current.addObjectiveReward(obj.reward)
+          eventBusRef.current.emit({
+            type: GAME_EVENTS.OBJECTIVE_COMPLETED,
+            objectiveId: obj.id,
+            reward: obj.reward,
+          })
+          if (goalModeRef.current === 'endless') goal.rotateChallenge()
+        }
+        if (missionComplete && !destroyRef.current) {
+          destroyRef.current = true
+          const snap = scoringRef.current.snapshot()
+          finishRun({
+            score: snap.score,
+            distanceMeters: snap.distanceMeters,
+            survivalTime: survivalRef.current,
+            speedKmh: snap.topSpeed,
+            missionComplete: true,
+          })
+        }
+      }
+
       // Camera shake offset (applied after CameraManager placed the camera)
       const shakeOffset = effectsRef.current.shake.update(dt)
       camera.position.x += shakeOffset.x
@@ -165,6 +208,7 @@ export function GameWorld() {
 
       // Throttled store update for HUD
       statAccumRef.current += dt
+      objectiveAccumRef.current += dt
       if (statAccumRef.current >= 0.1) {
         statAccumRef.current = 0
         const snap = scoringRef.current.snapshot()
@@ -180,6 +224,17 @@ export function GameWorld() {
           collisions: snap.collisions,
           topSpeed: snap.topSpeed,
         })
+      }
+      if (objectiveAccumRef.current >= 0.1) {
+        objectiveAccumRef.current = 0
+        const snap = goal ? goal.snapshot() : null
+        if (snap) {
+          updateStats({
+            activeObjective: snap.active,
+            objectiveCompleted: snap.completedCount,
+            objectiveTotal: snap.totalCount,
+          })
+        }
       }
     } else {
       scrollRef.current = 0
