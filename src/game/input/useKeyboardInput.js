@@ -28,6 +28,14 @@ export function useKeyboardInput({ enabled = true } = {}) {
 
     const setKey = (code, isDown) => {
       const a = actionsRef.current
+      // Steer is derived from the currently held steering keys so it always
+      // returns to center when a key is released (even if the opposite key is
+      // still held).
+      const applySteer = () => {
+        const left = pressedRef.current.has('ArrowLeft') || pressedRef.current.has('KeyA')
+        const right = pressedRef.current.has('ArrowRight') || pressedRef.current.has('KeyD')
+        a.steer = right && !left ? 1 : left && !right ? -1 : 0
+      }
       switch (code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -39,11 +47,9 @@ export function useKeyboardInput({ enabled = true } = {}) {
           break
         case 'KeyA':
         case 'ArrowLeft':
-          a.steer = isDown ? -1 : a.steer === 1 ? 0 : -1
-          break
         case 'KeyD':
         case 'ArrowRight':
-          a.steer = isDown ? 1 : a.steer === -1 ? 0 : 1
+          applySteer()
           break
         case 'Space':
           a.handbrake = isDown

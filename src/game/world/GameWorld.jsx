@@ -77,6 +77,14 @@ export function GameWorld() {
     nearMissDetRef.current = createNearMissDetector()
     goalModeRef.current = useGameStore.getState().mode || 'endless'
     objectiveRef.current = createObjectiveManager({ mode: goalModeRef.current })
+    // Seed the objective HUD immediately so the panel is populated on frame 1
+    // (avoids a null/empty flicker before the first throttled update).
+    const objSnap = objectiveRef.current.snapshot()
+    updateStats({
+      activeObjective: objSnap.active,
+      objectiveCompleted: objSnap.completedCount,
+      objectiveTotal: objSnap.totalCount,
+    })
   }
   prevPhaseRef.current = phase
 
