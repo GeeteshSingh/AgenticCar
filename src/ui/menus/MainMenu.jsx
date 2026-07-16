@@ -1,14 +1,24 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useGameStore } from '@/stores/useGameStore'
 import { Canvas } from '@react-three/fiber'
 import { MenuBackdrop } from '@/ui/menus/MenuBackdrop'
+import { AudioSettings } from '@/ui/settings/AudioSettings'
+import { audioManager } from '@/game/audio/AudioManager'
 
 // Polished landing page for the game. A live, calm 3D backdrop sits behind a
 // modern hero + mode-selection card. Pure DOM/React (menu state only); the
 // R3F backdrop renders its own self-driving scene for ambience.
 export function MainMenu() {
   const startRun = useGameStore((s) => s.startRun)
+  const [showAudio, setShowAudio] = useState(false)
+
+  const handleStart = (mode) => {
+    audioManager.unlock()
+    audioManager.playUi()
+    startRun(mode)
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-slate-950 text-slate-100">
@@ -51,7 +61,7 @@ export function MainMenu() {
               title="Mission Mode"
               tag="Structured"
               blurb="Progress through sequential objectives — distance, overtakes, speed, survival — and finish with integrity intact."
-              onClick={() => startRun('mission')}
+              onClick={() => handleStart('mission')}
               accent="from-blue-500/20 to-blue-500/5 border-blue-400/40"
               cta="Start Mission"
             />
@@ -59,11 +69,33 @@ export function MainMenu() {
               title="Endless Mode"
               tag="Arcade"
               blurb="Drive as far as you can. Traffic thickens, optional challenges rotate, and one mistake too many ends the run."
-              onClick={() => startRun('endless')}
+              onClick={() => handleStart('endless')}
               accent="from-cyan-500/20 to-cyan-500/5 border-cyan-400/40"
               cta="Start Endless"
             />
           </div>
+
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={() => { audioManager.playUi(); setShowAudio((v) => !v) }}
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+            >
+              {showAudio ? 'Hide Audio Settings' : 'Audio Settings'}
+            </Button>
+          </div>
+          {showAudio && (
+            <div className="mx-auto mt-4 max-w-sm">
+              <Card className="bg-slate-900/60 border-slate-700/70 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-cyan-300 text-lg">Audio</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AudioSettings />
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           <div className="mt-8">
             <Card className="bg-slate-900/60 border-slate-700/70 backdrop-blur-md">
@@ -88,7 +120,7 @@ export function MainMenu() {
         </div>
 
         <p className="text-center mt-8 text-xs text-slate-400/80">
-          Built with React Three Fiber · Phase 2 playable slice
+          Built with React Three Fiber · Highway Objective
         </p>
       </div>
     </div>

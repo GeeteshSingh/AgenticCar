@@ -137,13 +137,13 @@ export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, su
   return (
     <group>
       {poolRef.current.map((v, i) => (
-        <PoolSlot key={i} vehicle={v} />
+        <PoolSlot key={i} vehicle={v} headlightRef={headlightRef} />
       ))}
     </group>
   )
 }
 
-function PoolSlot({ vehicle }) {
+function PoolSlot({ vehicle, headlightRef }) {
   const groupRef = useRef()
   useFrame(() => {
     const g = groupRef.current

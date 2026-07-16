@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useEffect } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { EndlessHighway } from '@/game/world/EndlessHighway'
 import { PlayerCar } from '@/game/player/PlayerCar'
@@ -18,6 +19,7 @@ import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
 import { createEventBus, GAME_EVENTS } from '@/game/events/gameEvents'
 import { createObjectiveManager } from '@/game/objectives/ObjectiveManager'
 import { getMission } from '@/game/objectives/missionDefinitions'
+import { audioManager } from '@/game/audio/AudioManager'
 import { Environment } from '@/game/environment/Environment'
 
 // Live 3D scene for Phase 2. The player car stays near z=0; the highway
@@ -76,6 +78,8 @@ export function GameWorld() {
   // Bumped on each fresh run so TrafficManager resets its pool deterministically
   const runTokenRef = useRef(0)
   const prevPhaseRef = useRef(phase)
+  const day = getEnvForPhase('day')
+
   if (prevPhaseRef.current !== 'playing' && phase === 'playing') {
     runTokenRef.current += 1
     distanceRef.current = 0
@@ -90,21 +94,24 @@ export function GameWorld() {
     goalModeRef.current = useGameStore.getState().mode || 'endless'
     objectiveRef.current = createObjectiveManager({ mode: goalModeRef.current })
     dayNightRef.current.reset()
-    headlightRef.current = day.headlights ? 1 : 0
     // Re-seed locked phase for the new run.
     lockedPhaseRef.current = goalModeRef.current === 'mission' ? getMission().environment ?? null : null
-    // Seed the objective HUD immediately so the panel is populated on frame 1
-    // (avoids a null/empty flicker before the first throttled update).
-    const objSnap = objectiveRef.current.snapshot()
-    updateStats({
-      activeObjective: objSnap.active,
-      objectiveCompleted: objSnap.completedCount,
-      objectiveTotal: objSnap.totalCount,
-    })
   }
   prevPhaseRef.current = phase
 
-  const day = getEnvForPhase('day')
+  // Seed the objective HUD once per run (effect, not render) so the panel is
+  // populated on the first frame without a null flicker. Runs after the ref-
+  // based run-start block above, via the phase change to 'playing'.
+  useEffect(() => {
+    if (phase === 'playing' && objectiveRef.current) {
+      const objSnap = objectiveRef.current.snapshot()
+      updateStats({
+        activeObjective: objSnap.active,
+        objectiveCompleted: objSnap.completedCount,
+        objectiveTotal: objSnap.totalCount,
+      })
+    }
+  }, [phase, updateStats])
 
   // Read the mission-locked environment phase from the active mission def.
   if (goalModeRef.current === 'mission') {
@@ -132,6 +139,7 @@ export function GameWorld() {
     scoringRef.current.onCollision()
     overtakeDetRef.current.markCollided(assessment.vehicleId)
     eventBusRef.current.emit({ type: GAME_EVENTS.COLLISION, vehicleId: assessment.vehicleId, severity: assessment.severity })
+    audioManager.playCollision(assessment.severity)
     if (integrityRef.current <= 0 && !destroyRef.current) {
       destroyRef.current = true
       // brief slow-mo already achieved by speed bleed; transition to results
@@ -182,6 +190,8 @@ export function GameWorld() {
       if (e === 'toggleCamera') toggleCameraMode()
       else if (e === 'togglePause') togglePause()
     }
+    // Any control input counts as a user gesture; unlock audio context.
+    if (edges.length) audioManager.unlock()
 
     if (cooldownRef.current > 0) cooldownRef.current = Math.max(0, cooldownRef.current - dt)
 
@@ -194,6 +204,11 @@ export function GameWorld() {
 
     if (running) {
       const s = update(dt, actionsRef.current)
+
+      // Phase 8: speed-reactive engine + wind audio (graceful if unavailable)
+      const speedNorm = Math.min(1, Math.abs(s.speed) / VEHICLE.maxSpeed)
+      audioManager.updateEngine(speedNorm)
+      audioManager.updateWind(speedNorm)
 
       // Advance virtual distance (meters) from speed
       const dMeters = Math.max(0, s.speed) * KMH_TO_MS * dt
@@ -213,6 +228,7 @@ export function GameWorld() {
       for (const m of misses) {
         scoringRef.current.addNearMiss(m)
         eventBusRef.current.emit({ type: GAME_EVENTS.NEAR_MISS, vehicleId: m.vehicleId, relativeSpeed: m.relativeSpeed, distance: m.distance })
+        audioManager.playNearMiss()
       }
 
       // Highway scrolls visually with speed (m/s), car is at z=0
@@ -299,6 +315,8 @@ export function GameWorld() {
       }
     } else {
       scrollRef.current = 0
+      // Silence engine/wind while paused, in menus, or on results.
+      audioManager.stopContinuous()
     }
   })
 

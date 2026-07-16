@@ -1,12 +1,18 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useGameStore } from '@/stores/useGameStore'
+import { AudioSettings } from '@/ui/settings/AudioSettings'
+import { audioManager } from '@/game/audio/AudioManager'
 
 // Pause overlay shown when phase === 'paused'. Restart/return-to-menu are
 // stubs until results + reset land in Phase 4; for now resume is primary.
 export function PauseMenu() {
   const resume = useGameStore((s) => s.resume)
   const returnToMenu = useGameStore((s) => s.returnToMenu)
+  const [showAudio, setShowAudio] = useState(false)
+
+  const click = () => audioManager.playUi()
 
   return (
     <div className="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
@@ -15,11 +21,23 @@ export function PauseMenu() {
           <CardTitle className="text-3xl text-cyan-400">PAUSED</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button onClick={resume} className="w-full h-12 bg-cyan-600 hover:bg-cyan-500">
+          <Button onClick={() => { click(); resume() }} className="w-full h-12 bg-cyan-600 hover:bg-cyan-500">
             Resume
           </Button>
           <Button
-            onClick={returnToMenu}
+            onClick={() => { click(); setShowAudio((v) => !v) }}
+            variant="outline"
+            className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-800"
+          >
+            {showAudio ? 'Hide Audio' : 'Audio Settings'}
+          </Button>
+          {showAudio && (
+            <div className="pt-2 pb-1 px-1">
+              <AudioSettings />
+            </div>
+          )}
+          <Button
+            onClick={() => { click(); returnToMenu() }}
             variant="outline"
             className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-800"
           >

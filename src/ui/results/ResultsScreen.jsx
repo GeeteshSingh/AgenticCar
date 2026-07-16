@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useGameStore } from '@/stores/useGameStore'
+import { audioManager } from '@/game/audio/AudioManager'
 
 // Results screen shown when integrity reaches zero (endless) or a mission
 // ends. Displays full run stats from the store. Restart begins a fresh run of
@@ -31,13 +33,16 @@ export function ResultsScreen() {
   return (
     <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center p-4">
       <div className="text-center mb-8">
-        <h1
+        <motion.h1
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
           className={`text-5xl font-black mb-2 ${
             missionComplete ? 'text-emerald-400' : 'text-red-400'
           }`}
         >
           {missionComplete ? 'MISSION COMPLETE' : 'RUN OVER'}
-        </h1>
+        </motion.h1>
         <p className="text-slate-400">
           {missionComplete
             ? 'All objectives finished'
@@ -60,13 +65,13 @@ export function ResultsScreen() {
           ))}
           <div className="pt-3 space-y-2">
             <Button
-              onClick={() => startRun(mode || 'endless')}
+              onClick={() => { audioManager.playUi(); startRun(mode || 'endless') }}
               className="w-full h-12 bg-cyan-600 hover:bg-cyan-500"
             >
               Restart
             </Button>
             <Button
-              onClick={returnToMenu}
+              onClick={() => { audioManager.playUi(); returnToMenu() }}
               variant="outline"
               className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-800"
             >
