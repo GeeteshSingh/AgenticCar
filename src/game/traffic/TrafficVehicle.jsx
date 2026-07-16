@@ -1,11 +1,12 @@
-import { useRef } from 'react'
+import { Suspense, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { VEHICLE } from '@/game/config/vehicleConfig'
+import { VehicleModel } from '@/game/assets/VehicleModel'
+import { modelFileForTrafficType } from '@/game/assets/vehicleModels'
 
-// Visual primitive for one traffic vehicle. Transform (z, x, facing) is driven
-// each frame by TrafficManager's pooled state; this component only reads the
-// ref. Low-poly sedan/van/truck body with working lights. Oncoming vehicles
-// show bright headlights toward the player; same-direction show tail-lights.
+// Visual for one traffic vehicle, built from a loaded GLB model (auto-fitted
+// to the vehicle's dims). Transform (z, x, facing) is driven each frame by
+// TrafficManager's pooled state; this component only reads the ref.
 export function TrafficVehicle({ vehicleRef, headlightRef }) {
   const groupRef = useRef()
   const headMatRefs = useRef([])
@@ -28,44 +29,21 @@ export function TrafficVehicle({ vehicleRef, headlightRef }) {
   const l = vehicleRef?.length ?? 4
   const h = vehicleRef?.height ?? 1.4
   const color = vehicleRef?.color ?? '#ef4444'
-  const flashed = (vehicleRef?.flash ?? 0) > 0
-  const oncoming = (vehicleRef?.direction ?? 1) < 0
+  const file = modelFileForTrafficType(vehicleRef?.type)
 
   return (
     <group ref={groupRef}>
-      {/* Lower body */}
-      <mesh castShadow position={[0, h * 0.3, 0]}>
-        <boxGeometry args={[w, h * 0.42, l]} />
-        <meshStandardMaterial color={flashed ? '#ffffff' : color} emissive={flashed ? '#ffffff' : '#000000'} emissiveIntensity={flashed ? 0.8 : 0} metalness={0.4} roughness={0.4} />
-      </mesh>
-      {/* Cabin */}
-      <mesh castShadow position={[0, h * 0.78, -l * 0.04]}>
-        <boxGeometry args={[w * 0.84, h * 0.48, l * 0.5]} />
-        <meshStandardMaterial color="#0b1220" metalness={0.2} roughness={0.1} />
-      </mesh>
-
-      {/* Lights depend on whether the car faces the player.
-          Front of the mesh is +z. If oncoming (mesh rotated PI), the mesh's
-          +z points toward the player, so headlights must sit at +z. If
-          same-direction, tail-lights (rear, -z) face the player. */}
-      {/* Headlights (mesh +z) */}
-      <mesh position={[w * 0.3, h * 0.42, l / 2 + 0.02]}>
-        <boxGeometry args={[0.38, 0.16, 0.05]} />
-        <meshStandardMaterial color="#fffbe6" emissive="#fde047" emissiveIntensity={1.8} ref={(m) => (headMatRefs.current[0] = m)} />
-      </mesh>
-      <mesh position={[-w * 0.3, h * 0.42, l / 2 + 0.02]}>
-        <boxGeometry args={[0.38, 0.16, 0.05]} />
-        <meshStandardMaterial color="#fffbe6" emissive="#fde047" emissiveIntensity={1.8} ref={(m) => (headMatRefs.current[1] = m)} />
-      </mesh>
-      {/* Tail lights (mesh -z) */}
-      <mesh position={[w * 0.3, h * 0.42, -l / 2 - 0.02]}>
-        <boxGeometry args={[0.4, 0.14, 0.05]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.2} ref={(m) => (tailMatRefs.current[0] = m)} />
-      </mesh>
-      <mesh position={[-w * 0.3, h * 0.42, -l / 2 - 0.02]}>
-        <boxGeometry args={[0.4, 0.14, 0.05]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.2} ref={(m) => (tailMatRefs.current[1] = m)} />
-      </mesh>
+      <Suspense fallback={null}>
+        <VehicleModel
+          file={file}
+          width={w}
+          length={l}
+          height={h}
+          color={color}
+          headMatRefs={headMatRefs}
+          tailMatRefs={tailMatRefs}
+        />
+      </Suspense>
     </group>
   )
 }
