@@ -17,11 +17,11 @@ export function MainMenu() {
         <Canvas
           shadows
           dpr={[1, 1.5]}
-          camera={{ position: [0, 4, 13], fov: 60 }}
+          camera={{ position: [0, 3, 9], fov: 58 }}
           gl={{ antialias: true }}
         >
-          <color attach="background" args={['#7db8f0']} />
-          <fog attach="fog" args={['#bcd4ec', 230, 680]} />
+          <color attach="background" args={['#9fc6ee']} />
+          <fog attach="fog" args={['#aacbe8', 200, 560]} />
           <MenuBackdrop />
         </Canvas>
       </div>

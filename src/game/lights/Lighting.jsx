@@ -4,7 +4,7 @@ import * as THREE from 'three'
 
 // Sun disc visual. A small emissive sphere placed far away along the sun
 // direction so the player can see a sun/moon in the sky.
-export function SunDisc({ position = [60, 80, -120], color = '#fde68a', size = 14 }) {
+export function SunDisc({ position = [60, 80, -120], color = '#fde68a', size = 14, ...props }) {
   const ref = useRef()
   const geometry = useMemo(() => new THREE.SphereGeometry(size, 24, 24), [size])
   const material = useMemo(
@@ -12,7 +12,7 @@ export function SunDisc({ position = [60, 80, -120], color = '#fde68a', size = 1
     [color],
   )
   return (
-    <mesh ref={ref} position={position} frustumCulled={false}>
+    <mesh ref={ref} position={position} frustumCulled={false} {...props}>
       <primitive object={geometry} attach="geometry" />
       <primitive object={material} attach="material" />
     </mesh>

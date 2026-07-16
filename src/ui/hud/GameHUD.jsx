@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 export function GameHUD() {
   const distanceMeters = useGameStore((s) => s.distanceMeters)
   const cameraMode = useGameStore((s) => s.cameraMode)
+  const dayNightPhase = useGameStore((s) => s.dayNightPhase)
 
   return (
     <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
@@ -53,6 +54,9 @@ export function GameHUD() {
         <span className="text-xs text-slate-500 bg-slate-900/60 px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
           W/A/S/D or Arrows to drive · Space handbrake · C camera · Esc pause
         </span>
+        <Badge variant="secondary" className="bg-slate-800/80 text-amber-200 border border-slate-600">
+          {dayNightPhase}
+        </Badge>
       </div>
     </div>
   )

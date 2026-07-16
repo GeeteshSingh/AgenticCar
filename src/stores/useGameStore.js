@@ -36,6 +36,7 @@ export const useGameStore = create((set, get) => ({
   objectiveTotal: 0,
   missionComplete: false,
   cameraMode: 'chase', // 'chase' | 'hood'
+  dayNightPhase: 'Day', // Phase 7: current environment label for the HUD
 
   // ---- Actions ----
   setPhase: (phase) => set({ phase }),

@@ -21,7 +21,7 @@ import { assessCollision } from '@/game/collision/collisionSeverity'
 // vehicle (guarded by the vehicle's `hit` flag) so the host can apply damage,
 // shake, and effects. The hit vehicle is recycled immediately to avoid
 // re-triggering.
-export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, survivalRef, active, runToken, onCollision, cooldownRef, vehiclesRef }) {
+export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, survivalRef, active, runToken, onCollision, cooldownRef, vehiclesRef, headlightRef }) {
   const poolRef = useRef(
     Array.from({ length: TRAFFIC.poolSize }, () => ({
       id: null,
@@ -156,7 +156,7 @@ function PoolSlot({ vehicle }) {
   return (
     <group ref={groupRef} visible={false}>
       {vehicle.active && (
-        <TrafficVehicle vehicleRef={vehicle} flash={vehicle.flash} rev={vehicle.rev} />
+        <TrafficVehicle vehicleRef={vehicle} headlightRef={headlightRef} flash={vehicle.flash} rev={vehicle.rev} />
       )}
     </group>
   )

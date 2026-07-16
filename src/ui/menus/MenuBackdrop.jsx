@@ -4,6 +4,7 @@ import { Skybox } from '@/game/skycube/Skybox'
 import { SunDisc } from '@/game/lights/Lighting'
 import { EndlessHighway } from '@/game/world/EndlessHighway'
 import { PlayerCar } from '@/game/player/PlayerCar'
+import { WORLD } from '@/game/config/gameConfig'
 
 // Ambient, self-driving scene shown behind the main menu. It does not use the
 // real game store — it just cruises forward at a calm speed so the landing
@@ -45,7 +46,7 @@ export function MenuBackdrop() {
 
       <EndlessHighway scrollRef={scrollRef} />
 
-      <PlayerCar stateRef={carState} />
+      <PlayerCar stateRef={carState} roadTop={WORLD.roadTop} />
     </group>
   )
 }

@@ -7,7 +7,8 @@ import { TrafficManager } from '@/game/traffic/TrafficManager'
 import { useArcadeVehicleController } from '@/game/player/useArcadeVehicleController'
 import { useKeyboardInput } from '@/game/input/useKeyboardInput'
 import { useGameStore, GAME_STATES } from '@/stores/useGameStore'
-import { ENVIRONMENT } from '@/game/config/gameConfig'
+import { WORLD, getEnvForPhase } from '@/game/config/gameConfig'
+import { createDayNightCycle } from '@/game/environment/DayNightCycle'
 import { KMH_TO_MS, VEHICLE } from '@/game/config/vehicleConfig'
 import { createCollisionEffects } from '@/game/effects/useCollisionEffects'
 import { setCollisionFlash } from '@/game/effects/collisionSignal'
@@ -16,6 +17,7 @@ import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
 import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
 import { createEventBus, GAME_EVENTS } from '@/game/events/gameEvents'
 import { createObjectiveManager } from '@/game/objectives/ObjectiveManager'
+import { getMission } from '@/game/objectives/missionDefinitions'
 import { Environment } from '@/game/environment/Environment'
 
 // Live 3D scene for Phase 2. The player car stays near z=0; the highway
@@ -30,13 +32,23 @@ export function GameWorld() {
   const updateStats = useGameStore((s) => s.updateStats)
 
   const { actionsRef, consumeEdgeActions } = useKeyboardInput({ enabled: phase === 'playing' || phase === 'paused' })
-  const { camera } = useThree()
+  const { camera, scene } = useThree()
 
   const running = phase === 'playing'
   const { stateRef, update } = useArcadeVehicleController(actionsRef, { active: running })
 
   // Scroll value the highway reads (visual world speed in m/s)
   const scrollRef = useRef(0)
+
+  // Phase 7: day/night refs. Declared early so the run-start block (which
+  // seeds them) and applyEnvironment (called in the frame loop) share scope.
+  const dayNightRef = useRef(createDayNightCycle())
+  const ambientRef = useRef()
+  const sunRef = useRef()
+  const skyMatRef = useRef()
+  const envRef = useRef(getEnvForPhase('day')) // shared interpolated env snapshot
+  const headlightRef = useRef(0) // 0..1 emissive boost for headlights/taillights
+  const lockedPhaseRef = useRef(null)
 
   // Collision / integrity / effects
   const effectsRef = useRef(createCollisionEffects())
@@ -77,6 +89,10 @@ export function GameWorld() {
     nearMissDetRef.current = createNearMissDetector()
     goalModeRef.current = useGameStore.getState().mode || 'endless'
     objectiveRef.current = createObjectiveManager({ mode: goalModeRef.current })
+    dayNightRef.current.reset()
+    headlightRef.current = day.headlights ? 1 : 0
+    // Re-seed locked phase for the new run.
+    lockedPhaseRef.current = goalModeRef.current === 'mission' ? getMission().environment ?? null : null
     // Seed the objective HUD immediately so the panel is populated on frame 1
     // (avoids a null/empty flicker before the first throttled update).
     const objSnap = objectiveRef.current.snapshot()
@@ -88,7 +104,14 @@ export function GameWorld() {
   }
   prevPhaseRef.current = phase
 
-  const day = ENVIRONMENT.day
+  const day = getEnvForPhase('day')
+
+  // Read the mission-locked environment phase from the active mission def.
+  if (goalModeRef.current === 'mission') {
+    lockedPhaseRef.current = getMission().environment ?? null
+  } else {
+    lockedPhaseRef.current = null
+  }
 
   // Applies a collision assessment: reduces integrity, slows the car, shakes
   // the camera, and triggers the finish sequence at zero integrity.
@@ -130,6 +153,28 @@ export function GameWorld() {
     finishRunRef.current?.(results)
   }
 
+  // Apply the current interpolated environment to the live scene objects.
+  // Called every frame; mutates refs/textures so React never re-renders.
+  const applyEnvironment = () => {
+    const e = envRef.current
+    if (!e) return
+    if (ambientRef.current) ambientRef.current.intensity = e.ambientIntensity
+    if (sunRef.current) {
+      sunRef.current.position.set(e.sunPosition[0], e.sunPosition[1], e.sunPosition[2])
+      sunRef.current.intensity = e.sunIntensity
+      if (sunRef.current.color) sunRef.current.color.set(e.sunColor)
+    }
+    if (skyMatRef.current) skyMatRef.current.color.set(e.skyColor)
+    if (scene?.fog) {
+      scene.fog.color.set(e.fogColor)
+      scene.fog.near = e.fogNear
+      scene.fog.far = e.fogFar
+    }
+    // Smoothly ramp headlight emissive boost toward target (0 day, 1 night).
+    const target = e.headlights ? 1 : 0
+    headlightRef.current += (target - headlightRef.current) * Math.min(1, 4 * (1 / 60))
+  }
+
   useFrame((_, dt) => {
     // Edge actions (camera / pause toggles)
     const edges = consumeEdgeActions()
@@ -139,6 +184,13 @@ export function GameWorld() {
     }
 
     if (cooldownRef.current > 0) cooldownRef.current = Math.max(0, cooldownRef.current - dt)
+
+    // Phase 7: advance day/night cycle and apply the current environment to
+    // lights, sky, and fog imperatively (no per-frame React re-render).
+    if (running) {
+      envRef.current = dayNightRef.current.update(dt, { lockedPhase: lockedPhaseRef.current })
+    }
+    applyEnvironment()
 
     if (running) {
       const s = update(dt, actionsRef.current)
@@ -231,6 +283,7 @@ export function GameWorld() {
           nearMisses: snap.nearMisses,
           collisions: snap.collisions,
           topSpeed: snap.topSpeed,
+          dayNightPhase: envRef.current?.label ?? 'Day',
         })
       }
       if (objectiveAccumRef.current >= 0.1) {
@@ -251,10 +304,12 @@ export function GameWorld() {
 
   return (
     <group>
-      <ambientLight intensity={day.ambientIntensity} />
+      <ambientLight ref={ambientRef} intensity={day.ambientIntensity} />
       <directionalLight
+        ref={sunRef}
         position={day.sunPosition}
         intensity={day.sunIntensity}
+        color={day.sunColor}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-60}
@@ -271,7 +326,7 @@ export function GameWorld() {
       </mesh>
 
       {/* Sky, sun/moon disc, distant mountains */}
-      <Environment env={day} />
+      <Environment env={envRef.current} skyMatRef={skyMatRef} />
 
       <EndlessHighway scrollRef={scrollRef} />
 
@@ -286,10 +341,11 @@ export function GameWorld() {
         cooldownRef={cooldownRef}
         onCollision={handleCollision}
         vehiclesRef={trafficVehiclesRef}
+        headlightRef={headlightRef}
       />
 
       {/* Player car + camera both read the same controller state ref */}
-      <PlayerCar stateRef={stateRef} />
+      <PlayerCar stateRef={stateRef} roadTop={WORLD.roadTop} headlightRef={headlightRef} />
       <CameraManager targetRef={stateRef} cameraMode={cameraMode} />
 
       {/* HUD overlay is DOM, rendered by AppShell/GameRouter separately */}

@@ -9,11 +9,11 @@ export function GameCanvas() {
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ position: [0, 5, 12], fov: 60 }}
+      camera={{ position: [0, 3, 8], fov: 58 }}
       gl={{ antialias: true }}
     >
-      <color attach="background" args={['#7db8f0']} />
-      <fog attach="fog" args={['#bcd4ec', 220, 640]} />
+      <color attach="background" args={['#9fc6ee']} />
+      <fog attach="fog" args={['#aacbe8', 180, 520]} />
       <GameWorld />
     </Canvas>
   )
