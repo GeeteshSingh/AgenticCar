@@ -5,6 +5,7 @@ import { useGameStore } from '@/stores/useGameStore'
 import { Canvas } from '@react-three/fiber'
 import { MenuBackdrop } from '@/ui/menus/MenuBackdrop'
 import { AudioSettings } from '@/ui/settings/AudioSettings'
+import { GraphicsSettings } from '@/ui/settings/GraphicsSettings'
 import { audioManager } from '@/game/audio/AudioManager'
 
 // Polished landing page for the game. A live, calm 3D backdrop sits behind a
@@ -13,6 +14,7 @@ import { audioManager } from '@/game/audio/AudioManager'
 export function MainMenu() {
   const startRun = useGameStore((s) => s.startRun)
   const [showAudio, setShowAudio] = useState(false)
+  const [showGraphics, setShowGraphics] = useState(false)
 
   const handleStart = (mode) => {
     audioManager.unlock()
@@ -92,6 +94,28 @@ export function MainMenu() {
                 </CardHeader>
                 <CardContent>
                   <AudioSettings />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="mt-4 flex justify-center">
+            <Button
+              onClick={() => { audioManager.playUi(); setShowGraphics((v) => !v) }}
+              variant="outline"
+              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+            >
+              {showGraphics ? 'Hide Graphics Settings' : 'Graphics Settings'}
+            </Button>
+          </div>
+          {showGraphics && (
+            <div className="mx-auto mt-4 max-w-sm">
+              <Card className="bg-slate-900/60 border-slate-700/70 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-cyan-300 text-lg">Graphics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <GraphicsSettings />
                 </CardContent>
               </Card>
             </div>

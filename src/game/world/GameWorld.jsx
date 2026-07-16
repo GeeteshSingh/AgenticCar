@@ -20,13 +20,14 @@ import { createEventBus, GAME_EVENTS } from '@/game/events/gameEvents'
 import { createObjectiveManager } from '@/game/objectives/ObjectiveManager'
 import { getMission } from '@/game/objectives/missionDefinitions'
 import { audioManager } from '@/game/audio/AudioManager'
+import { useAutoPerformanceTier } from '@/hooks/useAutoPerformanceTier'
 import { Environment } from '@/game/environment/Environment'
 
 // Live 3D scene for Phase 2. The player car stays near z=0; the highway
 // scrolls toward it. All high-frequency simulation runs here via refs in the
 // render loop. React state is only touched for throttled HUD stats and the
 // camera-mode toggle.
-export function GameWorld() {
+export function GameWorld({ shadowMapSize = 1024 }) {
   const phase = useGameStore((s) => s.phase)
   const cameraMode = useGameStore((s) => s.cameraMode)
   const toggleCameraMode = useGameStore((s) => s.toggleCameraMode)
@@ -38,6 +39,9 @@ export function GameWorld() {
 
   const running = phase === 'playing'
   const { stateRef, update } = useArcadeVehicleController(actionsRef, { active: running })
+
+  // Phase 9: sample FPS and adapt the auto graphics tier while playing.
+  useAutoPerformanceTier(running)
 
   // Scroll value the highway reads (visual world speed in m/s)
   const scrollRef = useRef(0)
@@ -328,8 +332,8 @@ export function GameWorld() {
         position={day.sunPosition}
         intensity={day.sunIntensity}
         color={day.sunColor}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
+        castShadow={shadowMapSize > 0}
+        shadow-mapSize={[shadowMapSize || 1024, shadowMapSize || 1024]}
         shadow-camera-left={-60}
         shadow-camera-right={60}
         shadow-camera-top={60}

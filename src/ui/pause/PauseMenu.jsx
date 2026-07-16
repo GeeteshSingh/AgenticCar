@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useGameStore } from '@/stores/useGameStore'
 import { AudioSettings } from '@/ui/settings/AudioSettings'
+import { GraphicsSettings } from '@/ui/settings/GraphicsSettings'
 import { audioManager } from '@/game/audio/AudioManager'
 
 // Pause overlay shown when phase === 'paused'. Restart/return-to-menu are
@@ -11,6 +12,7 @@ export function PauseMenu() {
   const resume = useGameStore((s) => s.resume)
   const returnToMenu = useGameStore((s) => s.returnToMenu)
   const [showAudio, setShowAudio] = useState(false)
+  const [showGraphics, setShowGraphics] = useState(false)
 
   const click = () => audioManager.playUi()
 
@@ -34,6 +36,18 @@ export function PauseMenu() {
           {showAudio && (
             <div className="pt-2 pb-1 px-1">
               <AudioSettings />
+            </div>
+          )}
+          <Button
+            onClick={() => { click(); setShowGraphics((v) => !v) }}
+            variant="outline"
+            className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-800"
+          >
+            {showGraphics ? 'Hide Graphics' : 'Graphics Settings'}
+          </Button>
+          {showGraphics && (
+            <div className="pt-2 pb-1 px-1">
+              <GraphicsSettings />
             </div>
           )}
           <Button

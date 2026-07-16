@@ -12,8 +12,16 @@ export const useSettingsStore = create((set) => ({
   musicVolume: 0.4,
   muted: false,
 
+  // Graphics / performance. graphicsQuality is the user's choice
+  // ('auto' lets the runtime pick a tier and adapt). autoTier is the resolved
+  // tier when in auto mode; it can be lowered at runtime if FPS drops.
+  graphicsQuality: 'auto', // 'auto' | 'low' | 'medium' | 'high'
+  autoTier: 'high',
+
   setVolume: (key, value) => set({ [key]: Math.max(0, Math.min(1, value)) }),
   toggleMuted: () => set((s) => ({ muted: !s.muted })),
+  setGraphicsQuality: (q) => set({ graphicsQuality: q }),
+  setAutoTier: (t) => set({ autoTier: t }),
   reset: () =>
     set({
       masterVolume: 0.7,
@@ -22,5 +30,7 @@ export const useSettingsStore = create((set) => ({
       environmentVolume: 0.5,
       musicVolume: 0.4,
       muted: false,
+      graphicsQuality: 'auto',
+      autoTier: 'high',
     }),
 }))
