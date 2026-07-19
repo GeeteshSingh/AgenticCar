@@ -7,22 +7,24 @@ export const TRAFFIC = {
   // within [spawnDistanceMin, spawnDistance] so the spawn-safety escape-lane
   // check does not treat a fresh batch as an unavoidable wall and so the road
   // feels alive instead of cars appearing in a single synchronized line.
-  spawnDistance: 180,
-  spawnDistanceMin: 110,
-  despawnDistance: -40,
+  spawnDistance: 220,
+  spawnDistanceMin: 130,
+  despawnDistance: -50,
 
   // Pool size caps simultaneous traffic regardless of difficulty.
-  poolSize: 24,
+  poolSize: 28,
 
   // Relative z-velocity (toward player) = playerSpeed +/- trafficSpeed.
   // Defined by lane direction below; see TrafficManager.
 
   // Vehicle archetypes (primitive meshes). width/length in meters.
+  // Added a 'bus' for more visual variety and larger scoreboard targets.
   types: [
     { id: 'sedan', color: '#ef4444', width: 2.0, length: 4.4, height: 1.4 },
     { id: 'truck', color: '#f59e0b', width: 2.4, length: 7.5, height: 2.6 },
     { id: 'van', color: '#a855f7', width: 2.2, length: 5.2, height: 2.0 },
     { id: 'sport', color: '#22c55e', width: 1.9, length: 4.0, height: 1.2 },
+    { id: 'bus', color: '#3b82f6', width: 2.6, length: 9.0, height: 2.8 },
   ],
 
   // Lane directions. length must match WORLD.laneCount (4).
@@ -31,7 +33,11 @@ export const TRAFFIC = {
   laneDirections: [1, 1, -1, -1],
 
   // Min gap (meters in z) required between consecutive same-lane vehicles.
-  minGap: 16,
+  minGap: 18,
+
+  // Scoreboard-related: points awarded for successfully avoiding/clearing
+  // traffic. Used by ScoringManager to keep players engaged.
+  clearancePoints: 50,
 }
 
 // Resolve a lane's world-x center from WORLD config (kept here to avoid

@@ -26,7 +26,6 @@ export const DIFFICULTY = {
   scoreMultiplierBonusT1: 0.5,
 }
 
-// Linear interpolation helper
 export function lerp(a, b, t) {
   return a + (b - a) * Math.min(1, Math.max(0, t))
 }

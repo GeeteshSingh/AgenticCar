@@ -19,12 +19,15 @@ function pickSpeed(direction, t) {
   const tr = DIFFICULTY.traffic
   if (direction > 0) {
     // same direction: slower than player, range grows with difficulty
+    // Increased base speed range for more engaging traffic
     const maxSpeed = lerp(tr.sameDirectionSpeedMaxT0, tr.sameDirectionSpeedMaxT1, t)
-    return tr.sameDirectionSpeedMin + Math.random() * (maxSpeed - tr.sameDirectionSpeedMin)
+    const minSpeed = tr.sameDirectionSpeedMin * (1 + t * 0.5) // Scale minimum with difficulty
+    return minSpeed + Math.random() * (maxSpeed - minSpeed)
   }
   // oncoming: approaches head-on; speed grows with difficulty
+  // Increased oncoming speeds for challenge
   const maxSpeed = lerp(tr.oncomingSpeedMin, tr.oncomingSpeedMax, t)
-  return tr.oncomingSpeedMax - Math.random() * (maxSpeed - tr.oncomingSpeedMin)
+  return maxSpeed - Math.random() * (maxSpeed - tr.oncomingSpeedMin) * 0.7
 }
 
 // Try to spawn one vehicle. Returns a vehicle spec, or null if unsafe.

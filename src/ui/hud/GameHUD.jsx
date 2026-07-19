@@ -1,6 +1,7 @@
 import { useGameStore } from '@/stores/useGameStore'
 import { SpeedDisplay } from '@/ui/hud/SpeedDisplay'
 import { ScoreDisplay } from '@/ui/hud/ScoreDisplay'
+import { Scoreboard } from '@/ui/hud/Scoreboard'
 import { IntegrityDisplay } from '@/ui/hud/IntegrityDisplay'
 import { ObjectiveDisplay } from '@/ui/hud/ObjectiveDisplay'
 import { Card, CardContent } from '@/components/ui/card'
@@ -44,13 +45,14 @@ export function GameHUD() {
         </div>
       </div>
 
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-end gap-4">
         <div className="flex items-end gap-3">
           <Badge variant="secondary" className="bg-slate-800/80 text-cyan-300 border border-slate-600">
             {cameraMode === 'chase' ? 'CHASE (C)' : 'HOOD (C)'}
           </Badge>
           <ObjectiveDisplay />
         </div>
+        <Scoreboard />
         <span className="text-xs text-slate-500 bg-slate-900/60 px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
           W/A/S/D or Arrows to drive · Space handbrake · C camera · Esc pause
         </span>

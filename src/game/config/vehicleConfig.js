@@ -10,9 +10,9 @@ export const VEHICLE = {
   mass: 1200, // kg (referential only; arcade model)
 
   // Speed limits (km/h)
-  maxSpeed: 220,
-  cruiseSpeed: 120, // speed the car auto-drives toward when no boost input
-  maxReverseSpeed: 18,
+  maxSpeed: 280, // increased for more engaging high-speed driving
+  cruiseSpeed: 130, // speed the car auto-drives toward when no boost input
+  maxReverseSpeed: 22,
 
   // Longitudinal acceleration (km/h per second)
   enginePower: 65, // throttle accel at low speed

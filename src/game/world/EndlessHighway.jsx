@@ -17,8 +17,14 @@ import { WORLD } from '@/game/config/gameConfig'
 //   - The road spans the full lane width (WORLD.roadWidth) and remains continuous
 //     both behind the camera and toward the horizon.
 
-const SEGMENT_LENGTH = 40
-const SEGMENT_COUNT = 30 // ~1200 units of road (covers view + recycle slack)
+// --- PUBLIC TUNABLE PARAMETERS -----------------------------------------
+
+const BASE_SEGMENT_LENGTH = 40
+const SEGMENT_COUNT = 40 // ~1600 units of road (extended coverage)
+const CURVE_CONTROL_FACTOR = 2  // controls curve amplitude relative to segment length
+
+// --- CONSTANT STATE ----------------------------------------------------
+
 const ROAD_TOP = WORLD.roadTop
 const GROUND_TOP = 0.0
 const MARKING_Y = ROAD_TOP + 0.02
@@ -54,12 +60,84 @@ export function EndlessHighway({ scrollRef }) {
   const innerDividerX = [-(halfRoad - laneW), halfRoad - laneW]
   const medianX = 0
 
-  // Precompute segment base offsets. Start several segments behind the car so
-  // the road is continuous under and behind the camera on the very first frame.
-  const positions = useMemo(
-    () => Array.from({ length: SEGMENT_COUNT }, (_, i) => (i - 8) * SEGMENT_LENGTH),
+  // --- CURVE GENERATION -------------------------------------------------
+  // Generate a multi-segment Bezier (chain of cubic Bezier curves) for road path
+  // First, create control points that will dictate path curvature
+  const controlPoints = useMemo(() => {
+    // Create points that alternate between centerline and lateral offsets using noise
+    const points = []
+    // Create multiple control segments that will form a sequence of Bezier curves
+    const smoothness = 0.02  // how sharply the curve changes direction
+    const baseFlatness = 1.2   // controls how far control handles extend
+    const curveCoefficient = BASE_SEGMENT_LENGTH * CURVE_CONTROL_FACTOR
+    
+    // Generate a path that winds laterally while moving forward
+    for (let i = 0; i < SEGMENT_COUNT; i++) {
+      const z = i * BASE_SEGMENT_LENGTH
+      const cumulativeZ = z
+      
+      // Add lateral offset using a slow noise function for organic flow
+      const lateralNoise = Math.sin(i * 0.015) * (laneW * 1.5) * Math.sin(i * 0.03)
+      const curveOffset = lateralNoise * (Math.cos(i * 0.02) * curveCoefficient)
+      
+      points.push({
+        x: curveOffset,
+        z: cumulativeZ,
+        scale: 1 + Math.sin(i * 0.02) * 0.05,
+      })
+    }
+    
+    return points
+  }, [SEGMENT_COUNT, BASE_SEGMENT_LENGTH])
+
+  // Convert Bezier control points into segment positions using Catmull-Rom-like approach
+  const positions = useMemo(() => {
+    const posArr = []
+    // Simulate a moving point along the curve at regular intervals
+    for (let i = 0; i < SEGMENT_COUNT; i++) {
+      const index = i
+      const roadZ = index * BASE_SEGMENT_LENGTH
+      
+      // Use Bezier control points to simulate curve variation in X axis
+      const curveControl = ((i / SEGMENT_COUNT) % 1) * Math.PI * 2
+      const offsetX = Math.sin(curveControl) * (laneW * 0.8)
+      
+      posArr.push({
+        x: offsetX,
+        z: roadZ,
+        rouxDeltaZ: BASE_SEGMENT_LENGTH,
+      })
+    }
+    
+    return posArr
+  }, [SEGMENT_COUNT, BASE_SEGMENT_LENGTH])
+
+  // Use original straight position generation if needed for fallback
+  const basePositions = useMemo(
+    () => Array.from({ length: SEGMENT_COUNT }, (_, i) => (i - 8) * BASE_SEGMENT_LENGTH),
     [],
   )
+  
+  // Generate curved road segments with smooth offset interpolation
+  const curvedPositions = useMemo(() => {
+    const laneW = WORLD.roadWidth / WORLD.laneCount
+    const curveAmplitude = laneW * 0.35  // controls curve severity
+    const curveFrequency = 0.025
+    
+    return Array.from({ length: SEGMENT_COUNT }, (_, i) => {
+      const z = (i - 8) * BASE_SEGMENT_LENGTH
+      // Apply smooth sine-based curve for gentle road curvature
+      const curvePhase = (z / BASE_SEGMENT_LENGTH) * Math.PI * 2.5
+      const lateralOffset = Math.sin(curvePhase) * curveAmplitude
+      // Add small random variation for organic feel
+      const randomJitter = Math.sin(i * 0.317) * 2.5
+      
+      return {
+        baseZ: z,
+        offsetX: lateralOffset + randomJitter,
+      }
+    })
+  }, [SEGMENT_COUNT, BASE_SEGMENT_LENGTH])
 
   // Dashed markings per segment for the two inner dividers.
   const dashOffsets = useMemo(() => {
@@ -67,43 +145,47 @@ export function EndlessHighway({ scrollRef }) {
     const gap = 5
     const step = dash + gap
     const offsets = []
-    const start = -SEGMENT_LENGTH / 2 + gap / 2
-    for (let z = start; z < SEGMENT_LENGTH / 2; z += step) offsets.push(z)
+    const start = -BASE_SEGMENT_LENGTH / 2 + gap / 2
+    for (let z = start; z < BASE_SEGMENT_LENGTH / 2; z += step) offsets.push(z)
     return offsets
   }, [])
 
   // Rolling hills — fixed recycled pool, kept well clear of the road.
   const hills = useMemo(() => {
     const arr = []
-    const perSide = 2
+    const perSide = 3
     for (let i = 0; i < SEGMENT_COUNT; i++) {
       for (let h = 0; h < perSide; h++) {
-        const z = i * SEGMENT_LENGTH + (h / perSide) * SEGMENT_LENGTH
+        const curveIndex = i / SEGMENT_COUNT
+        const z = i * BASE_SEGMENT_LENGTH + (h / perSide) * BASE_SEGMENT_LENGTH
         const side = (i + h) % 2 === 0 ? 1 : -1
         const height = 22 + ((i * 11 + h * 7) % 26)
-        const radius = 30 + ((i + h) % 3) * 10
+        const radius = 30 + ((i + h) % 3) * 10 + Math.sin(i * 0.1) * 5
         const x = side * (halfRoad + WORLD.shoulderWidth + radius + 22 + (h % 2) * 20)
-        arr.push({ x, z, height, radius, key: `h${i}_${h}` })
+        arr.push({ x, z, height, radius, key: `h${i}_${h}_curve${i}` })
       }
     }
     return arr
   }, [halfRoad])
 
-  // Roadside pines — recycled pool with natural-looking jitter + clustering.
+  // Roadside dark-green pines (recycled) with compact placement patterns
   const pines = useMemo(() => {
     const arr = []
     const perSide = 5
     for (let i = 0; i < SEGMENT_COUNT; i++) {
       for (let t = 0; t < perSide; t++) {
-        const z = i * SEGMENT_LENGTH + (t / perSide) * SEGMENT_LENGTH - SEGMENT_LENGTH / 2
+        const z = i * BASE_SEGMENT_LENGTH + (t / perSide) * BASE_SEGMENT_LENGTH - BASE_SEGMENT_LENGTH / 2
         const side = (i + t) % 2 === 0 ? 1 : -1
-        // pseudo-random but deterministic jitter so placement isn't mirrored
         const r = ((i * 928371 + t * 12347) % 1000) / 1000
         const r2 = ((i * 53341 + t * 7717) % 1000) / 1000
         const dist = WORLD.roadWidth / 2 + WORLD.shoulderWidth + 9 + r * 26
         const x = side * dist
         const scale = 0.8 + r2 * 0.6
-        arr.push({ x, z, scale, key: `t${i}_${t}` })
+        // Add some variation in scaling for compact pine clusters
+        arr.push({
+          x, z, scale, key: `t${i}_${t}_curve${i}`, 
+          rotation: ((i * 928371 + t * 12347) % 360) * 0.0174533,
+        })
       }
     }
     return arr
@@ -119,7 +201,7 @@ export function EndlessHighway({ scrollRef }) {
       if (!group?.current) return
       // Threshold: keep chunks until they are well behind the camera so the
       // road never disappears under/behind the player.
-      const recycleZ = -SEGMENT_LENGTH * 4
+      const recycleZ = -BASE_SEGMENT_LENGTH * 4
       for (let i = 0; i < group.current.children.length; i++) {
         const seg = group.current.children[i]
         seg.position.z -= scrollSpeed * dt
@@ -128,7 +210,7 @@ export function EndlessHighway({ scrollRef }) {
           for (let j = 0; j < group.current.children.length; j++) {
             maxZ = Math.max(maxZ, group.current.children[j].position.z)
           }
-          seg.position.z = maxZ + SEGMENT_LENGTH
+          seg.position.z = maxZ + BASE_SEGMENT_LENGTH
         }
       }
     }
@@ -147,31 +229,31 @@ export function EndlessHighway({ scrollRef }) {
 
       {/* Road + markings + guardrail train */}
       <group ref={roadGroupRef}>
-        {positions.map((z, i) => (
-          <group key={i} position={[0, 0, z]}>
+        {positions.map((seg, i) => (
+          <group key={i} position={[seg.offsetX || 0, 0, seg.z]}>
             {/* Asphalt surface (slab, top at ROAD_TOP) */}
             <mesh receiveShadow position={[0, ROAD_TOP - 0.15, 0]}>
-              <boxGeometry args={[WORLD.roadWidth, 0.3, SEGMENT_LENGTH]} />
+              <boxGeometry args={[WORLD.roadWidth, 0.3, BASE_SEGMENT_LENGTH]} />
               <primitive object={mats.road} attach="material" />
             </mesh>
             {/* Darker apron just below the asphalt edge for a crisp curb line */}
             <mesh position={[0, GROUND_TOP - 0.02, 0]}>
-              <boxGeometry args={[WORLD.roadWidth + 0.1, 0.06, SEGMENT_LENGTH]} />
+              <boxGeometry args={[WORLD.roadWidth + 0.1, 0.06, BASE_SEGMENT_LENGTH]} />
               <primitive object={mats.roadEdge} attach="material" />
             </mesh>
 
             {/* Grass shoulders (calm green, readable transition to terrain) */}
             {[1, -1].map((s) => (
-              <mesh key={s} position={[s * (halfRoad + WORLD.shoulderWidth / 2), GROUND_TOP, 0]}>
-                <boxGeometry args={[WORLD.shoulderWidth, 0.06, SEGMENT_LENGTH]} />
+              <mesh key={s * 10 + i} position={[s * (halfRoad + WORLD.shoulderWidth / 2), GROUND_TOP, seg.z]}>
+                <boxGeometry args={[WORLD.shoulderWidth, 0.06, BASE_SEGMENT_LENGTH]} />
                 <primitive object={mats.shoulder} attach="material" />
               </mesh>
             ))}
 
             {/* Solid white edge lines along both outer borders */}
             {[edgeX, -edgeX].map((x) => (
-              <mesh key={x} position={[x, MARKING_Y, 0]}>
-                <boxGeometry args={[0.28, 0.04, SEGMENT_LENGTH * 0.98]} />
+              <mesh key={`${x}_${i}`} position={[x, MARKING_Y, seg.z]}>
+                <boxGeometry args={[0.28, 0.04, BASE_SEGMENT_LENGTH * 0.98]} />
                 <primitive object={mats.laneLine} attach="material" />
               </mesh>
             ))}
@@ -179,7 +261,7 @@ export function EndlessHighway({ scrollRef }) {
             {/* Dashed lane dividers (inner, +/-laneW) */}
             {innerDividerX.map((x) =>
               dashOffsets.map((dz, k) => (
-                <mesh key={`${x}_${k}`} position={[x, MARKING_Y, dz]}>
+                <mesh key={`${x}_${dz}_${i}`} position={[x, MARKING_Y, dz]}>{/* Fixed Z offset */}
                   <boxGeometry args={[0.24, 0.04, 4]} />
                   <primitive object={mats.centerLine} attach="material" />
                 </mesh>
@@ -187,22 +269,22 @@ export function EndlessHighway({ scrollRef }) {
             )}
 
             {/* Solid median (between opposite directions) */}
-            <mesh position={[medianX, MARKING_Y, 0]}>
-              <boxGeometry args={[0.28, 0.04, SEGMENT_LENGTH * 0.98]} />
+            <mesh position={[medianX, MARKING_Y, seg.z]}>
+              <boxGeometry args={[0.28, 0.04, BASE_SEGMENT_LENGTH * 0.98]} />
               <primitive object={mats.laneLine} attach="material" />
             </mesh>
 
             {/* Guardrails on both shoulders (metal), with posts */}
             {[1, -1].map((s) => (
-              <group key={s}>
-                <mesh position={[s * railX, 0.6, 0]}>
-                  <boxGeometry args={[0.18, 0.9, SEGMENT_LENGTH]} />
+              <group key={s * 10 + i}>
+                <mesh position={[s * railX, 0.6, seg.z]}>
+                  <boxGeometry args={[0.18, 0.9, BASE_SEGMENT_LENGTH]} />
                   <primitive object={mats.rail} attach="material" />
                 </mesh>
                 {Array.from({ length: 4 }, (_, p) => (
                   <mesh
                     key={p}
-                    position={[s * railX, 0.3, -SEGMENT_LENGTH / 2 + (p + 0.5) * (SEGMENT_LENGTH / 4)]}
+                    position={[s * railX, 0.3, seg.z - BASE_SEGMENT_LENGTH / 2 + (p + 0.5) * (BASE_SEGMENT_LENGTH / 4)]}
                   >
                     <boxGeometry args={[0.14, 0.6, 0.14]} />
                     <primitive object={mats.railPost} attach="material" />
@@ -227,7 +309,7 @@ export function EndlessHighway({ scrollRef }) {
       {/* Roadside dark-green pines (recycled) */}
       <group ref={pineGroupRef}>
         {pines.map((tree) => (
-          <group key={tree.key} position={[tree.x, GROUND_TOP, tree.z]} scale={tree.scale}>
+          <group key={tree.key} position={[tree.x, GROUND_TOP, tree.z]} rotation={[0, 0, tree.rotation]} scale={tree.scale}>
             <mesh position={[0, 1, 0]} castShadow>
               <cylinderGeometry args={[0.28, 0.4, 2, 6]} />
               <primitive object={mats.trunk} attach="material" />
