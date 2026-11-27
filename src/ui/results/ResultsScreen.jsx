@@ -1,3 +1,4 @@
+import { brand } from '@/config/brand'
 import { useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -65,7 +66,7 @@ export function ResultsScreen() {
 
       <Card className="w-full max-w-sm shrink-0 bg-slate-900/65 border-slate-500/60">
         <CardHeader>
-          <CardTitle className="text-cyan-400 text-2xl text-center">Results</CardTitle>
+          <CardTitle className="text-cyan-400 text-2xl text-center">{brand.name} · Results</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {stats.map(([label, value]) => (

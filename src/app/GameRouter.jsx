@@ -1,3 +1,4 @@
+import { brand } from '@/config/brand'
 import { useEffect } from 'react'
 import { useGameStore, GAME_STATES } from '@/stores/useGameStore'
 import { GameCanvas } from '@/game/GameCanvas'
@@ -33,7 +34,7 @@ function LoadingGate({ children }) {
   return (
     <div className="h-screen w-screen bg-slate-950 flex items-center justify-center">
       <div className="text-cyan-400 text-xl font-mono tracking-widest">
-        {phase === GAME_STATES.LOADING && 'LOADING…'}
+        {phase === GAME_STATES.LOADING && brand.tagline}
         {phase === GAME_STATES.COUNTDOWN && 'GET READY'}
       </div>
     </div>
