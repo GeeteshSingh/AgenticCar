@@ -28,10 +28,25 @@ export function FreeRoamWorld() {
     return texture
   }, [])
   useEffect(() => () => sign.dispose(), [sign])
+  const marketAd = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 512
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#8f4125'; ctx.fillRect(0,0,1024,512)
+    ctx.fillStyle = '#efbb59'; ctx.fillRect(24,24,976,464)
+    ctx.fillStyle = '#244c3a'; ctx.fillRect(44,44,936,424)
+    ctx.fillStyle = '#f3d590'; ctx.beginPath(); ctx.arc(790,245,135,0,Math.PI*2); ctx.fill()
+    ctx.fillStyle = '#dd7044'; ctx.beginPath(); ctx.ellipse(790,250,68,88,-.3,0,Math.PI*2); ctx.fill()
+    ctx.fillStyle = '#75a65b'; ctx.beginPath(); ctx.ellipse(830,162,36,17,-.6,0,Math.PI*2); ctx.fill()
+    ctx.textAlign = 'left'; ctx.fillStyle = '#fff4dd'; ctx.font = 'bold 72px sans-serif'; ctx.fillText('DESERT',88,170)
+    ctx.fillText('MARKET',88,255); ctx.font = '36px sans-serif'; ctx.fillText('Take a break. Browse local.',88,322)
+    ctx.font = '24px sans-serif'; ctx.fillText('FICTIONAL SHOP',88,410)
+    const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; return texture
+  }, [])
+  useEffect(() => () => marketAd.dispose(), [marketAd])
   const roads = useMemo(() => {
     const parts = ROAD_POSITIONS.flatMap(offset => {
-      const vertical = new THREE.PlaneGeometry(12, 1500); vertical.rotateX(-Math.PI / 2); vertical.translate(offset, .01, 0)
-      const horizontal = new THREE.PlaneGeometry(1500, 12); horizontal.rotateX(-Math.PI / 2); horizontal.translate(0, .012, offset)
+      const vertical = new THREE.PlaneGeometry(12, 652); vertical.rotateX(-Math.PI / 2); vertical.translate(offset, .01, 0)
+      const horizontal = new THREE.PlaneGeometry(652, 12); horizontal.rotateX(-Math.PI / 2); horizontal.translate(0, .012, offset)
       return [vertical, horizontal]
     })
     const merged = mergeGeometries(parts); parts.forEach(part => part.dispose()); return merged
@@ -76,6 +91,12 @@ export function FreeRoamWorld() {
       <mesh position={[0,2,0]}><boxGeometry args={[10,4,7]}/><meshStandardMaterial color="#d5aa72"/></mesh>
       <mesh position={[0,4.1,0]}><boxGeometry args={[11,.3,8]}/><meshStandardMaterial color="#664335"/></mesh>
       <mesh position={[0,1.7,-3.55]}><boxGeometry args={[5,2,.1]}/><meshStandardMaterial color="#533522"/></mesh>
+    </group>
+    <group position={[188,0,164]}>
+      <mesh position={[0,2.3,0]}><boxGeometry args={[12,4.6,8]}/><meshStandardMaterial color="#dbb680"/></mesh>
+      <mesh position={[0,4.7,0]}><boxGeometry args={[13,.3,9]}/><meshStandardMaterial color="#744e36"/></mesh>
+      <mesh position={[0,2,-4.05]}><boxGeometry args={[4,2.8,.1]}/><meshStandardMaterial color="#3a4942"/></mesh>
+      <mesh position={[0,8,-1]}><boxGeometry args={[16,6,.18]}/><meshBasicMaterial map={marketAd}/></mesh>
     </group>
     <group position={[28,0,4]}>
       <mesh position={[0,2,0]}><boxGeometry args={[8,4,6]}/><meshStandardMaterial color="#c48c57"/></mesh>

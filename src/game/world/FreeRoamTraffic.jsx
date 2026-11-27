@@ -14,7 +14,7 @@ const VEHICLES = [
   {axis:'x', road:160, direction:1, start:50, speed:9, color:'#c07146'},
   {axis:'x', road:-160, direction:-1, start:-220, speed:12, color:'#6c7883'},
 ]
-const SPAN = 900
+const SPAN = 640
 export function FreeRoamTraffic() {
   const refs = useRef([]), time = useRef(0)
   useFrame((_, delta) => {

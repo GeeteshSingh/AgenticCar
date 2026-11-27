@@ -3,6 +3,7 @@ export const FREE_ROAM_PLACES = [
   { name: 'Chai stop', x: 28, z: 4 },
   { name: 'Desert fuel stop', x: -28, z: 164 },
   { name: 'Roadside dhaba', x: 188, z: 4 },
+  { name: 'Desert Market', x: 188, z: 164 },
 ]
 export function nearbyFreeRoamPlace(x, z, speed) {
   return Math.abs(speed) < 5 ? FREE_ROAM_PLACES.find(place => Math.hypot(x - place.x, z - place.z) < 18)?.name || '' : ''
