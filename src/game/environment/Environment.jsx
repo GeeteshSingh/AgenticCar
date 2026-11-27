@@ -41,8 +41,9 @@ export function Atmosphere({ settings = {} }) {
     colors.targetSun.set(a.sun).lerp(colors.other.set(b.sun), t)
     colors.sky.lerp(colors.targetSky, blend)
     fog.color.lerp(colors.targetFog, blend)
-    fog.near += ((settings.weather === 'fog' ? 30 : settings.weather === 'rain' ? 60 : 160) - fog.near) * blend
-    fog.far += ((settings.weather === 'fog' ? 220 : settings.weather === 'rain' ? 350 : 600) - fog.far) * blend
+    const haze = settings.environment === 'forest' ? 0.72 : settings.environment === 'desert' ? 0.85 : 1
+    fog.near += ((settings.weather === 'fog' ? 30 : settings.weather === 'rain' ? 60 : 160 * haze) - fog.near) * blend
+    fog.far += ((settings.weather === 'fog' ? 220 : settings.weather === 'rain' ? 350 : 600 * haze) - fog.far) * blend
     if (ambient.current) ambient.current.intensity += ((a.ambient + (b.ambient - a.ambient) * t) - ambient.current.intensity) * blend
     if (sun.current) {
       sun.current.color.lerp(colors.targetSun, blend)
@@ -69,7 +70,9 @@ function DistantScenery({ environment = 'countryside' }) {
   return <group>
     {Array.from({ length: 18 }, (_, i) => {
       const angle = i / 18 * Math.PI * 2
-      return <mesh key={i} position={[Math.sin(angle) * 470, 14, Math.cos(angle) * 470]} scale={[100, 50 + (i * 17) % 90, 90]}>
+      if (environment === 'coast' && Math.sin(angle) > 0.15) return null
+      const height = environment === 'forest' ? 90 + (i * 17) % 100 : environment === 'desert' ? 12 + (i * 13) % 22 : environment === 'countryside' ? 24 + (i * 17) % 28 : 40 + (i * 17) % 50
+      return <mesh key={i} position={[Math.sin(angle) * 470, 14, Math.cos(angle) * 470]} scale={[100, height, 90]}>
         <icosahedronGeometry args={[1, 0]} /><meshStandardMaterial color={palette.hills} roughness={1} />
       </mesh>
     })}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { WORLD } from '@/game/config/gameConfig'
+import { RouteLandmarks } from './RouteLandmarks'
 import { roadFrame, terrainHeight, WORLD_PALETTES } from './roadProfile'
 
 const LENGTH = 48
@@ -31,7 +32,7 @@ function writeStrip(geometry, offsets, start, distance, environment, lift, terra
   const points = geometry.attributes.position.array
   for (let i = 0; i <= STEPS; i++) {
     const z = start + i * LENGTH / STEPS
-    const frame = frames ? frames[i] : roadFrame(z, distance)
+    const frame = frames ? frames[i] : roadFrame(z, distance, 1, environment)
     for (let j = 0; j < offsets.length; j++) {
       const k = (i * offsets.length + j) * 3
       points[k] = frame.x + offsets[j]
@@ -87,7 +88,7 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
     for (let i = 0; i < COUNT; i++) {
       const start = base + i * LENGTH
       const strip = strips[i]
-      const frames = Array.from({ length: STEPS + 1 }, (_, row) => roadFrame(start + row * LENGTH / STEPS, distance))
+      const frames = Array.from({ length: STEPS + 1 }, (_, row) => roadFrame(start + row * LENGTH / STEPS, distance, 1, environment))
       if (environment === 'coast') writeStrip(strip.water, [26, 400], start, distance, environment, -3, false, frames)
       writeStrip(strip.ground, WIDTHS, start, distance, environment, -0.08, true, frames)
       writeStrip(strip.shoulder, [-10, -half, half, 10], start, distance, environment, -0.03, false, frames)
@@ -112,23 +113,26 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
       const side = i % 2 === 0 ? -1 : 1
       const globalZ = (Math.floor(distance / 8) + Math.floor(i / 2) - 10) * 8
       const z = globalZ - distance
-      const frame = roadFrame(z, distance)
+      const frame = roadFrame(z, distance, 1, environment)
       const cell = Math.floor(globalZ / 8)
       const hash = (n, m) => ((n % m) + m) % m
       const offset = side * (16 + hash(cell * 37, 60))
       const scale = 0.8 + hash(cell * 13, 10) / 10
       const visible = (!low || hash(cell, 3) === 0) && !(environment === 'coast' && side > 0) && !(environment === 'desert' && hash(cell, 5) !== 0)
       const y = frame.y + terrainHeight(offset, globalZ, environment)
-      TEMP.position.set(frame.x + offset, y + scale * 3, z)
+      const treeHeight = environment === 'coast' ? 7 : environment === 'desert' ? 1.8 : environment === 'forest' ? 5 : 3.5
+      TEMP.position.set(frame.x + offset, y + scale * treeHeight, z)
       TEMP.rotation.set(0, cell, 0)
-      TEMP.scale.set(visible ? scale : 0, visible ? scale : 0, visible ? scale : 0)
+      const crownWidth = environment === 'desert' ? 1.25 : environment === 'coast' ? 1.5 : environment === 'forest' ? 1.8 : 1.4
+      const crownHeight = environment === 'desert' ? 0.45 : environment === 'coast' ? 0.35 : 1.1
+      TEMP.scale.set(visible ? scale * crownWidth : 0, visible ? scale * crownHeight : 0, visible ? scale * crownWidth : 0)
       TEMP.updateMatrix(); trees.current.setMatrixAt(i, TEMP.matrix)
-      TEMP.position.y = y + scale
-      TEMP.scale.set(visible ? scale * 0.24 : 0, visible ? scale : 0, visible ? scale * 0.24 : 0)
+      TEMP.position.y = y + scale * treeHeight / 2
+      TEMP.scale.set(visible ? scale * 0.12 : 0, visible ? scale * treeHeight / 2 : 0, visible ? scale * 0.12 : 0)
       TEMP.updateMatrix(); trunks.current.setMatrixAt(i, TEMP.matrix)
       const rockOffset = side * (48 + hash(cell * 19, 220))
       TEMP.position.set(frame.x + rockOffset, frame.y + terrainHeight(rockOffset, globalZ, environment) - 3, z)
-      TEMP.scale.set(7 + hash(cell, 8), 7 + hash(cell, 13), 8 + hash(cell, 5))
+      TEMP.scale.set(7 + hash(cell, 8), environment === 'forest' ? 12 + hash(cell, 24) : environment === 'desert' ? 1 + hash(cell, 3) : 4 + hash(cell, 5), 8 + hash(cell, 5))
       TEMP.updateMatrix(); rocks.current.setMatrixAt(i, TEMP.matrix)
     }
     trees.current.instanceMatrix.needsUpdate = true
@@ -138,6 +142,7 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
 
   return (
     <group>
+      <RouteLandmarks distanceRef={distanceRef || travelled} environment={environment} />
       {strips.map((strip, i) => <group key={i}>
         {environment === 'coast' && <mesh geometry={strip.water} material={materials.water} />}
         <mesh geometry={strip.ground} material={materials.ground} receiveShadow />
@@ -146,7 +151,7 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
         {strip.lines.map((line) => <mesh key={line.x} geometry={line.geometry} material={line.x === 0 ? materials.yellow : materials.white} />)}
       </group>)}
       <instancedMesh ref={trees} args={[null, null, 240]} frustumCulled={false}>
-        <coneGeometry args={[2.2, 6, 6]} /><meshStandardMaterial color={palette.foliage} roughness={1} />
+        {environment === 'coast' ? <PalmCrownGeometry /> : <icosahedronGeometry args={[2.2, 1]} />}<meshStandardMaterial color={palette.foliage} roughness={1} side={THREE.DoubleSide} />
       </instancedMesh>
       <instancedMesh ref={trunks} args={[null, null, 240]} frustumCulled={false}>
         <cylinderGeometry args={[1, 1.4, 2, 5]} /><meshStandardMaterial color="#635244" roughness={1} />
@@ -160,3 +165,21 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
 }
 
 export default EndlessHighway
+
+function PalmCrownGeometry() {
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry()
+    const vertices = []
+    for (let i = 0; i < 7; i++) {
+      const angle = i / 7 * Math.PI * 2
+      const x = Math.cos(angle) * 3, z = Math.sin(angle) * 3
+      const sideX = -Math.sin(angle) * 0.6, sideZ = Math.cos(angle) * 0.6
+      vertices.push(0, 0.8, 0, x + sideX, 0, z + sideZ, x * 1.25, -1, z * 1.25,
+        0, 0.8, 0, x * 1.25, -1, z * 1.25, x - sideX, 0, z - sideZ)
+    }
+    g.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); g.computeVertexNormals()
+    return g
+  }, [])
+  useEffect(() => () => geometry.dispose(), [geometry])
+  return <primitive object={geometry} attach="geometry" />
+}
