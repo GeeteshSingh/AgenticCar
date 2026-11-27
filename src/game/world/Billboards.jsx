@@ -40,18 +40,18 @@ function Billboard({ slot, distanceRef, environment }) {
       ctx.strokeStyle = '#f7e3b9'; ctx.lineWidth = 5; ctx.strokeRect(28, 28, 968, 456)
       ctx.fillStyle = '#f6ead1'; ctx.fillRect(0, 360, 1024, 2)
       ctx.textAlign = 'left'; ctx.fillStyle = '#fff8e8'; ctx.font = '700 80px sans-serif'; ctx.fillText(brand.name, 68, 165, 890)
-      ctx.font = '600 48px sans-serif'; ctx.fillText(brand.hindi, 68, 245, 890)
-      ctx.font = '36px sans-serif'; ctx.fillText(brand.tagline, 68, 312, 890)
+      ctx.font = '600 56px sans-serif'; ctx.fillText(brand.hindi, 68, 245, 890)
+      ctx.font = '44px sans-serif'; ctx.fillText(brand.tagline, 68, 312, 890)
       ctx.font = '24px sans-serif'; ctx.fillText('आपका सफ़र, आपकी राह', 68, 423, 600)
-      ctx.textAlign = 'right'; ctx.font = '20px sans-serif'; ctx.fillText('FICTIONAL SPONSORED EXAMPLE', 954, 462, 540)
+      ctx.textAlign = 'right'; ctx.font = '24px sans-serif'; ctx.fillText('FICTIONAL SPONSORED EXAMPLE', 954, 462, 540)
       label.texture.needsUpdate = true
     }
-    const absolute = cell * SPACING + 160, z = absolute - distance, offset = 15
+    const absolute = cell * SPACING + 160, z = absolute - distance, offset = 21
     const road = roadFrame(z, distance, 1, environment)
     group.current.position.set(road.x + offset, road.y + terrainHeight(offset, absolute, environment), z)
     group.current.rotation.y = road.heading
     group.current.updateWorldMatrix(true, false)
-    worldPosition.set(0, 5, 0).applyMatrix4(group.current.matrixWorld)
+    worldPosition.set(0, 7, 0).applyMatrix4(group.current.matrixWorld)
     projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); frustum.setFromProjectionMatrix(projection)
     if (z > 0 && z < 110 && frustum.containsPoint(worldPosition)) seenTime.current += Math.min(delta, .1)
     if (seenTime.current >= .5) eligible.current = true
@@ -64,6 +64,6 @@ function Billboard({ slot, distanceRef, environment }) {
   })
   return <group ref={group} visible={false}>
     {[-3,3].map(x => <mesh key={`short-support-${x}`} position={[x, .95, .5]}><boxGeometry args={[.18,1.9,.18]}/><meshStandardMaterial color="#48545a"/></mesh>)}
-    <mesh position={[0,5,0]} rotation={[0,Math.PI,0]}><planeGeometry args={[12,6]}/><meshBasicMaterial map={label.texture} side={THREE.DoubleSide}/></mesh>
+    <mesh position={[0,7,0]} rotation={[0,Math.PI,0]}><planeGeometry args={[20,10]}/><meshBasicMaterial map={label.texture} side={THREE.DoubleSide}/></mesh>
   </group>
 }
