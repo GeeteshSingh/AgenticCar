@@ -7,3 +7,5 @@
 - Large production JS bundle warning remains. Four existing lint warnings remain in legacy2D and UI exports.
 - Browser profiling remains required for per-frame road normals/bounds work. Object counts are bounded; bounded counts alone do not prove sustained frame rate.
 - Custom agent TOML parses and fresh Codex startup configuration succeeds, but named role auto-loading has not been independently exercised by the current tool, which dispatches instruction-defined tasks.
+
+Fresh-session role verification: a read-only Codex CLI session attempted to spawn qa_engineer but failed before reply with an internal thread-store/no-rollout error. Therefore named custom role loading remains unverified; direct instruction-based subagents did work during implementation. No project files were edited by the verification session.

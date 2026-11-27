@@ -56,3 +56,5 @@ Locations: ~/.codex/skills/.system/; ~/.codex/plugins/cache/claude-cowork/; ~/.c
 ## Conflicts resolved and remaining gates
 
 Old local CI branch lacked identity changes; refreshed main chosen as setup base. Subagent filesystem sharing is handled by isolated implementation worktrees and exclusive file ownership. Radio planning must use explicit new service contracts because the current event bus is private. Ordinary M3U and HLS remain distinct scopes. Product decisions and implementation authorization remain pending; see task register. No push, PR or merge performed for setup.
+
+Fresh-session role verification: a read-only Codex CLI session attempted to spawn qa_engineer but failed before reply with an internal thread-store/no-rollout error. Therefore named custom role loading remains unverified; direct instruction-based subagents did work during implementation. No project files were edited by the verification session.
