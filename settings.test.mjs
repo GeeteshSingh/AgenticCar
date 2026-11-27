@@ -16,3 +16,6 @@ console.log('Settings restore, bounds, persistence and storage-failure tests pas
 store.getState().setSetting('environment', 'desert')
 assert.equal(store.getState().weather, 'clear')
 assert.equal(store.getState().time, 'sunset')
+
+store.getState().setSetting('camera', 'interior')
+assert.equal(store.getState().camera, 'interior')

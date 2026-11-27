@@ -301,3 +301,10 @@
 }
 
 .drive-route-description { max-width: 490px; color: #b6ceca; font-size: 13px; line-height: 1.5; margin: 12px 0 0; }
+
+.vehicle-shortcuts { pointer-events: auto; position: absolute; top: 68px; right: 20px; z-index: 25; display: grid; gap: 3px; padding: 10px; width: min(300px, calc(100vw - 40px)); max-height: 60vh; overflow-y: auto; background: #10201ff2; border: 1px solid #54736a; border-radius: 12px; box-shadow: 0 12px 32px #0005; }
+.vehicle-shortcuts button { padding: 9px 12px; border-radius: 6px; text-align: left; color: #e2eee8; background: transparent; }
+.vehicle-shortcuts button:hover, .vehicle-shortcuts button[aria-pressed=true] { background: #2d4a41; }
+.vehicle-shortcuts kbd { margin-right: 9px; color: #a4d4b0; }
+.vehicle-shortcuts button:focus-visible, .drive-hud-pause:focus-visible { outline: 2px solid #b1e8c0; outline-offset: 2px; }
+.drive-hud-context { flex-wrap: wrap; }

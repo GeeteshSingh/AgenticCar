@@ -1,3 +1,6 @@
+import { updateTrafficAudio } from '@/game/audio/drivingMix'
+import { useEffect } from 'react'
+import { playerVehicle } from '@/game/config/playerVehicles'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useGameStore } from '@/stores/useGameStore'
 import { roadFrame } from '@/game/world/roadProfile'
@@ -6,7 +9,6 @@ import { useFrame } from '@react-three/fiber'
 import { TrafficVehicle } from '@/game/traffic/TrafficVehicle'
 import { trySpawnVehicle, spawnInterval, maxActiveVehicles, resetSpawnCounter } from '@/game/traffic/trafficSpawner'
 import { TRAFFIC, laneCenterX } from '@/game/config/trafficConfig'
-import { VEHICLE } from '@/game/config/vehicleConfig'
 import { difficultyFromProgress } from '@/game/config/difficultyConfig'
 import { assessCollision } from '@/game/collision/collisionSeverity'
 import { readPlayerSpeed, trafficDeltaZ, trafficStep } from '@/game/traffic/trafficSimulation'
@@ -45,6 +47,7 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
       rev: 0,
     })),
   )
+  useEffect(() => () => updateTrafficAudio([], 0), [])
   const nextDirectionRef = useRef(-1)
   const spawnTimerRef = useRef(0)
   const [, forceRender] = useState(0)
@@ -73,6 +76,7 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
     const playerSpeed = readPlayerSpeed(playerStateRef?.current)
     const t = difficultyFromProgress(distanceRef?.current ?? 0, survivalRef?.current ?? 0)
     const playerX = playerStateRef?.current?.lateralX ?? 0
+    updateTrafficAudio(poolRef.current, playerX)
     let inCooldown = (cooldownRef?.current ?? 0) > 0
 
     let changed = false
@@ -90,8 +94,9 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
       }
 
       // Collision check (AABB on x/z)
-      const halfPW = VEHICLE.width / 2
-      const halfPL = VEHICLE.length / 2
+      const dimensions = playerVehicle(useSettingsStore.getState().vehicle)
+      const halfPW = dimensions.width / 2
+      const halfPL = dimensions.length / 2
       const halfVW = v.width / 2
       const halfVL = v.length / 2
       const overlapX = Math.abs(playerX - v.x) < halfPW + halfVW

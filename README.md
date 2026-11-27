@@ -31,6 +31,7 @@ Pick Western Ghats (misty forested climbs), Thar Desert (dunes and scrub), Konka
 | A / ←, D / → | Steer |
 | Space | Handbrake |
 | C | Chase/hood camera |
+| 1–9 | Switch vehicle (also available in Settings) |
 | Escape | Pause/resume; close an open utility panel first |
 
 Cruise assist accelerates automatically when enabled. Coarse-pointer devices show touch controls; desktop is the primary target.
@@ -50,3 +51,7 @@ React 19/Vite/JavaScript, React Three Fiber/Three.js and Zustand. `src/app` owns
 See [Architecture](docs/ARCHITECTURE.md), [Testing](docs/TESTING.md), [Project status](docs/PROJECT_STATUS.md) and [Known issues](docs/KNOWN_ISSUES.md). The integrated product remains in acceptance testing: automated tests/build pass, actual MP3 radio playback was observed, and final browser/long-session checks remain outstanding. No screenshots are fabricated or bundled.
 
 Troubleshooting: run `npm ci` if Vite/Oxlint is missing; use a supported Node version; try low graphics quality if rendering is slow; choose another HTTPS MP3 station after a playback error. Storage-disabled browsers keep settings only for the current session and display a notice. Fullscreen WebGL requires hardware/browser support.
+
+Vehicle keys: 1 Thar-inspired SUV, 2 truck, 3 bicycle, 4 hatchback, 5 sedan, 6 auto rickshaw, 7 motorcycle, 8 bus, 9 pickup. Original procedural designs; no manufacturer models or logos. Speed limits and collision dimensions follow the selected vehicle.
+
+Collision feedback includes a synthesized impact sound (controlled by engine volume), red vignette and camera shake; reduced-motion preference suppresses shake. The results overlay keeps the stopped scene visible. Use **C** or the HUD View button to cycle chase, hood and a stylized right-hand-drive cockpit; bicycles and motorcycles use handlebars. The HUD Vehicles button opens the 1–9 selection shortcuts.

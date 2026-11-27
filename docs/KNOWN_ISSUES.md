@@ -9,3 +9,5 @@
 - Custom agent TOML parses and fresh Codex startup configuration succeeds, but named role auto-loading has not been independently exercised by the current tool, which dispatches instruction-defined tasks.
 
 Fresh-session role verification: a read-only Codex CLI session attempted to spawn qa_engineer but failed before reply with an internal thread-store/no-rollout error. Therefore named custom role loading remains unverified; direct instruction-based subagents did work during implementation. No project files were edited by the verification session.
+
+Latest release check: npm audit --omit=dev completed with exit 1 and confirmed 24 advisories (1 critical, 13 high, 10 moderate). Tests, lint and production build pass with four existing lint warnings and the large-chunk warning. New impact sound, camera shake, cockpit, shortcuts and retained-scene results require actual desktop/mobile browser acceptance; browser control host is unavailable. Release readiness is not approved by automated checks alone.

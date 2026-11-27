@@ -1,3 +1,5 @@
+import { playerVehicle } from '@/game/config/playerVehicles'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import * as THREE from 'three'
 import { VEHICLE } from '@/game/config/vehicleConfig'
 
@@ -16,9 +18,10 @@ export function createHoodCamera() {
     initialized,
     update(camera, target, dt) {
       if (!target) return
+      const vehicle = playerVehicle(useSettingsStore.getState().vehicle)
       // Position relative to car, but we keep it mostly locked to car rotation
-      _pos.set(target.lateralX + OFFSET.x, OFFSET.y, OFFSET.z)
-      _look.set(target.lateralX + target.yaw * 2 + (target.lookX || 0) + LOOK_AHEAD.x, LOOK_AHEAD.y + (target.lookY || 0), LOOK_AHEAD.z)
+      _pos.set(target.lateralX + OFFSET.x, Math.max(1.3, vehicle.height * 1.1), vehicle.length / 2 + .25)
+      _look.set(target.lateralX + target.yaw * 2 + (target.lookX || 0) + LOOK_AHEAD.x, Math.max(1.3, vehicle.height * 1.1) + (target.lookY || 0), LOOK_AHEAD.z)
 
       if (!initialized.current) {
         camera.position.copy(_pos)

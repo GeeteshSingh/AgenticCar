@@ -1,3 +1,5 @@
+import { playerVehicle } from '@/game/config/playerVehicles'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import * as THREE from 'three'
 import { VEHICLE } from '@/game/config/vehicleConfig'
 
@@ -21,13 +23,14 @@ export function createChaseCamera() {
     initialized,
     update(camera, target, dt) {
       if (!target) return
+      const vehicle = playerVehicle(useSettingsStore.getState().vehicle)
       const t = Math.min(1, 4.5 * dt) // position smoothing factor
 
       // Desired camera position relative to car heading
       _desiredPos.set(
         target.lateralX + OFFSET.x + target.steer * 1.2,
-        OFFSET.y,
-        OFFSET.z,
+        Math.max(OFFSET.y, vehicle.height + 2),
+        -Math.max(-OFFSET.z, vehicle.length * 1.6),
       )
       _lookTarget.set(
         target.lateralX + (target.lookX || 0) + LOOK_OFFSET.x,

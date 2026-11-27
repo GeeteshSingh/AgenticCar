@@ -28,7 +28,7 @@ function LoadingGate({ children }) {
     }
   }, [beginCountdown, beginPlaying])
 
-  if (phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED) return children
+  if (phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED || phase === GAME_STATES.RESULTS) return children
 
   return (
     <div className="h-screen w-screen bg-slate-950 flex items-center justify-center">
@@ -55,10 +55,11 @@ function Session() {
   return (
     <div className="h-screen w-screen relative overflow-hidden">
       <GameCanvas />
-      <CollisionFlash />
+      {phase !== GAME_STATES.RESULTS && <CollisionFlash />}
       {phase === GAME_STATES.PLAYING && <TouchControls />}
       {(phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED) && <GameHUD />}
       {phase === GAME_STATES.PAUSED && <PauseMenu />}
+      {phase === GAME_STATES.RESULTS && <ResultsScreen />}
     </div>
   )
 }
@@ -69,10 +70,6 @@ export function GameRouter() {
 
   if (phase === GAME_STATES.MENU) {
     return <MainMenu />
-  }
-
-  if (phase === GAME_STATES.RESULTS) {
-    return <ResultsScreen />
   }
 
   const runId = useGameStore.getState().runId

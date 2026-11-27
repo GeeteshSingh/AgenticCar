@@ -20,7 +20,7 @@ export function createNearMissDetector() {
 
   // playerX: lateral position; playerZ fixed ~0. relativeSpeed in km/h.
   // Returns list of { vehicleId, relativeSpeed, distance } for new near misses.
-  function detect({ playerX, vehicles, playerSpeed }) {
+  function detect({ playerX, vehicles, playerSpeed, playerWidth = VEHICLE.width }) {
     const misses = []
     const present = new Set()
     for (const v of vehicles) {
@@ -28,8 +28,8 @@ export function createNearMissDetector() {
       present.add(v.id)
       if (v.hit) { seen.set(v.id, 'skipped'); continue }
       if (seen.has(v.id)) continue
-      if (![playerX, playerSpeed, v.x, v.z, v.width, v.speed].every(Number.isFinite) || v.width <= 0) continue
-      const clearance = Math.abs(v.x - playerX) - (VEHICLE.width + v.width) / 2
+      if (![playerX, playerSpeed, playerWidth, v.x, v.z, v.width, v.speed].every(Number.isFinite) || playerWidth <= 0 || v.width <= 0) continue
+      const clearance = Math.abs(v.x - playerX) - (playerWidth + v.width) / 2
       if (clearance <= 0 || clearance > NEAR_MISS.lateralThreshold) continue
       if (Math.abs(v.z) > NEAR_MISS.zBand) continue
       const rel = Math.abs(

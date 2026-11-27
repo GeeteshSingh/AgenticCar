@@ -118,7 +118,7 @@ export const useGameStore = create((set, get) => ({
     }),
 
   toggleCameraMode: () =>
-    set((s) => ({ cameraMode: s.cameraMode === 'chase' ? 'hood' : 'chase' })),
+    set((s) => ({ cameraMode: s.cameraMode === 'chase' ? 'hood' : s.cameraMode === 'hood' ? 'interior' : 'chase' })),
 
   // Throttled stat updates from the game loop
   updateStats: (stats) => set(stats),

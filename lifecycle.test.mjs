@@ -16,3 +16,8 @@ store.getState().startRun('mission')
 assert.equal(store.getState().score, 0)
 assert.equal(store.getState().integrity, 100)
 console.log('Lifecycle and terminal snapshot tests passed')
+store.setState({cameraMode: 'chase'})
+for (const expected of ['hood', 'interior', 'chase']) {
+  store.getState().toggleCameraMode()
+  assert.equal(store.getState().cameraMode, expected)
+}

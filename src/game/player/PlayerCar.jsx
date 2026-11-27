@@ -1,84 +1,63 @@
+import * as THREE from 'three'
+import { useGameStore } from '@/stores/useGameStore'
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { VEHICLE } from '@/game/config/vehicleConfig'
+import { RoundedBox } from '@react-three/drei'
+import { useSettingsStore } from '@/stores/useSettingsStore'
+import { playerVehicle } from '@/game/config/playerVehicles'
 
-// Clean, minimalist low-poly white sedan. Visual only — position/rotation are
-// driven each frame from the controller's ref state. Fresh paint + glass +
-// working headlights (front, +z) and tail-lights (rear, -z).
-export function PlayerCar({ stateRef }) {
-  const groupRef = useRef()
-
-  useFrame(() => {
-    const s = stateRef?.current
-    if (!groupRef.current || !s) return
-    groupRef.current.position.x = s.lateralX
-    groupRef.current.rotation.y = s.yaw + (s.roadHeading || 0)
-    groupRef.current.rotation.z = s.bodyRoll
-    groupRef.current.rotation.x = s.bodyPitch - (s.roadPitch || 0)
-  })
-
-  const L = VEHICLE.length
-  const W = VEHICLE.width
-  const H = VEHICLE.height
-  const R = VEHICLE.wheelRadius
-
-  return (
-    <group ref={groupRef}>
-      {/* Body — sleek white */}
-      <mesh castShadow position={[0, H * 0.42, 0]}>
-        <boxGeometry args={[W, H * 0.5, L]} />
-        <meshStandardMaterial color="#f5f7fa" metalness={0.5} roughness={0.28} />
-      </mesh>
-      {/* Lower skirt for a cleaner wedge */}
-      <mesh castShadow position={[0, H * 0.2, 0]}>
-        <boxGeometry args={[W * 0.98, H * 0.28, L * 0.96]} />
-        <meshStandardMaterial color="#e5e8ee" metalness={0.4} roughness={0.4} />
-      </mesh>
-      {/* Cabin / greenhouse */}
-      <mesh castShadow position={[0, H * 0.82, -L * 0.04]}>
-        <boxGeometry args={[W * 0.82, H * 0.5, L * 0.46]} />
-        <meshStandardMaterial color="#0b1220" metalness={0.2} roughness={0.08} />
-      </mesh>
-      {/* Windshield glass hint */}
-      <mesh position={[0, H * 0.82, L * 0.2]}>
-        <boxGeometry args={[W * 0.78, H * 0.42, L * 0.04]} />
-        <meshStandardMaterial color="#bae6fd" transparent opacity={0.35} metalness={0.1} roughness={0.05} />
-      </mesh>
-
-      {/* Headlights (front = +z) */}
-      <mesh position={[W * 0.3, H * 0.4, L / 2 + 0.02]}>
-        <boxGeometry args={[0.4, 0.18, 0.05]} />
-        <meshStandardMaterial color="#fffbe6" emissive="#fde047" emissiveIntensity={1.6} />
-      </mesh>
-      <mesh position={[-W * 0.3, H * 0.4, L / 2 + 0.02]}>
-        <boxGeometry args={[0.4, 0.18, 0.05]} />
-        <meshStandardMaterial color="#fffbe6" emissive="#fde047" emissiveIntensity={1.6} />
-      </mesh>
-
-      {/* Tail lights (rear = -z) */}
-      <mesh position={[W * 0.3, H * 0.42, -L / 2 - 0.02]}>
-        <boxGeometry args={[0.42, 0.16, 0.05]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.1} />
-      </mesh>
-      <mesh position={[-W * 0.3, H * 0.42, -L / 2 - 0.02]}>
-        <boxGeometry args={[0.42, 0.16, 0.05]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={1.1} />
-      </mesh>
-
-      {/* Wheels */}
-      {[
-        [W / 2, R, L * 0.32],
-        [-W / 2, R, L * 0.32],
-        [W / 2, R, -L * 0.32],
-        [-W / 2, R, -L * 0.32],
-      ].map(([x, y, z], i) => (
-        <mesh key={i} position={[x, y, z]} rotation={[0, 0, Math.PI / 2]} castShadow>
-          <cylinderGeometry args={[R, R, 0.32, 16]} />
-          <meshStandardMaterial color="#0a0a0a" roughness={0.85} />
-        </mesh>
-      ))}
-    </group>
-  )
+function Box({position, size, color, metalness=.25, ...props}) {
+  return <RoundedBox args={size} radius={.06} smoothness={2} position={position} castShadow {...props}><meshStandardMaterial color={color} metalness={metalness} roughness={.35}/></RoundedBox>
 }
-
+function Tube({a,b,r=.035,color='#282d31'}) {
+  const mid=a.map((v,i)=>(v+b[i])/2), direction=b.map((v,i)=>v-a[i])
+  const length=Math.hypot(...direction)
+  return <mesh position={mid} quaternion={new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), new THREE.Vector3(...direction).normalize())} castShadow><cylinderGeometry args={[r,r,length,10]}/><meshStandardMaterial color={color} metalness={.6} roughness={.3}/></mesh>
+}
+function Wheel({position,radius=.38,thin=false}) {
+  const ref=useRef()
+  useFrame((_,dt)=>{if(ref.current && useGameStore.getState().phase === 'playing')ref.current.rotation.x+=Math.min(dt,.05)*useGameStore.getState().speedKmh/3.6/radius})
+  return <group position={position} ref={ref}><mesh rotation={[0,Math.PI/2,0]} castShadow><torusGeometry args={[radius,thin?.035:.105,8,24]}/><meshStandardMaterial color="#161b20" roughness={.85}/></mesh><mesh rotation={[0,0,Math.PI/2]}><cylinderGeometry args={[radius*.7,radius*.7,thin?.025:.17,12]}/><meshStandardMaterial color="#9ba8af" metalness={.8} roughness={.23} wireframe={thin}/></mesh></group>
+}
+export function PlayerCar({stateRef}) {
+  const ref=useRef()
+  const index=useSettingsStore(s=>s.vehicle)
+  const v=playerVehicle(index), w=v.width,l=v.length,h=v.height
+  useFrame(()=>{const s=stateRef.current;if(!ref.current)return;ref.current.position.x=s.lateralX;ref.current.rotation.set(s.bodyPitch-(s.roadPitch||0),s.yaw+(s.roadHeading||0),s.bodyRoll)})
+  const two=v.type==='cycle'||v.type==='bike'
+  return <group ref={ref} key={index}>
+    {two ? <>
+      <Wheel position={[0,.4,-l*.34]} radius={.38} thin={v.type==='cycle'}/><Wheel position={[0,.4,l*.34]} radius={.38} thin={v.type==='cycle'}/>
+      {[[[0,.4,-l*.34],[0,.55,0]],[[0,.55,0],[0,1,-.3]],[[0,1,-.3],[0,.4,-l*.34]],[[0,.55,0],[0,1,.45]],[[0,1,.45],[0,1,-.3]],[[0,1,.45],[0,.4,l*.34]]].map(([a,b],i)=><Tube key={i} a={a} b={b} color={v.color} r={v.type==='bike'?.08:.035}/>)}
+      <Tube a={[-.32,1.15,.45]} b={[.32,1.15,.45]}/><Box size={[.34,.12,.45]} position={[0,1.08,-.3]} color="#252930"/>
+      {v.type==='bike'&&<Box size={[.38,.35,.55]} position={[0,.75,0]} color={v.color}/>}
+    </> : <>
+      <Box size={[w,.35,l]} position={[0,.55,0]} color={v.color}/>
+      <Box size={[w*.9,.22,l*.94]} position={[0,.32,0]} color="#293039"/>
+      {v.type==='truck' ? <>
+        <Box size={[w,h*.45,l*.27]} position={[0,h*.35,l*.32]} color={v.color}/>
+        <Box size={[w*.86,h*.22,.06]} position={[0,h*.48,l*.46]} color="#233c47"/>
+        <Box size={[w*.96,h*.65,l*.62]} position={[0,h*.48,-l*.16]} color="#a1a8a0"/>
+        {[-.4,-.2,0,.2].map(z=><Box key={z} size={[w*1.01,.06,.08]} position={[0,h*.78,l*z]} color="#d3d5ca"/>)}
+      </> : <>
+        <Box size={[w*.86,h*.52,v.type==='bus'?l*.88:l*.49]} position={[0,h*.65,-l*.1]} color={v.type==='auto'?'#263a31':v.color}/>
+        <Box size={[w*.8,h*.27,.06]} position={[0,h*.73,v.type==='bus'?l*.35:l*.15]} color="#273f4b"/>
+        <Box size={[w*.78,h*.26,.06]} position={[0,h*.73,v.type==='bus'?-l*.54:-l*.35]} color="#273f4b"/>
+        {[-1,1].map(side=><Box key={side} size={[.05,h*.25,v.type==='bus'?l*.75:l*.38]} position={[side*w*.44,h*.73,-l*.12]} color="#273f4b"/>)}
+        <Box size={[w*.94,.12,v.type==='pickup'?l*.36:l*.4]} position={[0,h*.5,l*.3]} color={v.color}/>
+        {v.type==='suv'&&<Wheel position={[0,.95,-l*.55]} radius={.37}/>}
+      </>}
+      {[-1,1].map(side=><group key={side}>
+        {(v.type==='auto'?[-1]:[1,-1]).map(end=><Wheel key={end} position={[side*w*.48,.38,end*l*.33]}/>)}
+        <Box size={[.28,.16,.08]} position={[side*w*.32,.65,l*.51]} color="#fff1c3"/>
+        <Box size={[.28,.16,.08]} position={[side*w*.32,.65,-l*.51]} color="#e34d3e"/>
+        <Box size={[.18,.12,.23]} position={[side*w*.53,h*.72,l*.13]} color={v.color}/>
+      </group>)}
+      {v.type==='auto'&&<Wheel position={[0,.38,l*.33]}/>}
+      <Box size={[w*.9,.15,.13]} position={[0,.4,l*.52]} color="#5b6570"/>
+      <Box size={[.6,.16,.02]} position={[0,.55,-l*.53]} color="#f0eccf"/>
+      {[-.2,0,.2].map(x=><Box key={x} size={[.04,.2,.05]} position={[x,.64,l*.52]} color="#202831"/>)}
+    </>}
+  </group>
+}
 export default PlayerCar

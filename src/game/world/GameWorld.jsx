@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import { useThree, useFrame } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import { EndlessHighway } from '@/game/world/EndlessHighway'
 import { PlayerCar } from '@/game/player/PlayerCar'
 import { CameraManager } from '@/game/camera/CameraManager'
@@ -7,8 +7,10 @@ import { TrafficManager } from '@/game/traffic/TrafficManager'
 import { useArcadeVehicleController } from '@/game/player/useArcadeVehicleController'
 import { useKeyboardInput } from '@/game/input/useKeyboardInput'
 import { useGameStore } from '@/stores/useGameStore'
+import { playerVehicle } from '@/game/config/playerVehicles'
 import { KMH_TO_MS } from '@/game/config/vehicleConfig'
 import { createCollisionEffects } from '@/game/effects/useCollisionEffects'
+import { emitImpact } from '@/game/audio/impact'
 import { setCollisionFlash } from '@/game/effects/collisionSignal'
 import { createScoringManager } from '@/game/scoring/ScoringManager'
 import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
@@ -31,7 +33,6 @@ export function GameWorld() {
   const updateStats = useGameStore((s) => s.updateStats)
 
   const { actionsRef, consumeEdgeActions } = useKeyboardInput({ enabled: phase === 'playing' || phase === 'paused' })
-  const { camera } = useThree()
 
   const running = phase === 'playing'
   const { stateRef, update } = useArcadeVehicleController(actionsRef, { active: running })
@@ -93,6 +94,7 @@ export function GameWorld() {
     if (useGameStore.getState().mode === 'relaxed') return
     integrityRef.current = Math.max(0, integrityRef.current - assessment.damage)
     effectsRef.current.triggerSeverity(assessment.severity)
+    emitImpact(assessment.severity)
     cooldownRef.current = 0.6 // brief invulnerability so we don't multi-hit
     // Severe/moderate hits also bleed speed (km/h) and temporary accel loss
     const s = stateRef.current
@@ -177,7 +179,7 @@ export function GameWorld() {
         scoringRef.current.addOvertake()
         eventBusRef.current.emit({ type: GAME_EVENTS.VEHICLE_OVERTAKEN, vehicleId: id })
       }
-      const misses = nearMissDetRef.current.detect({ playerX: s.lateralX, vehicles, playerSpeed: s.speed })
+      const misses = nearMissDetRef.current.detect({ playerX: s.lateralX, vehicles, playerSpeed: s.speed, playerWidth: playerVehicle(useSettingsStore.getState().vehicle).width })
       for (const m of misses) {
         scoringRef.current.addNearMiss(m)
         eventBusRef.current.emit({ type: GAME_EVENTS.NEAR_MISS, vehicleId: m.vehicleId, relativeSpeed: m.relativeSpeed, distance: m.distance })
@@ -230,12 +232,6 @@ export function GameWorld() {
           })
         }
       }
-
-      // Camera shake offset (applied after CameraManager placed the camera)
-      const shakeOffset = effectsRef.current.shake.update(dt)
-      camera.position.x += shakeOffset.x
-      camera.position.y += shakeOffset.y
-      camera.position.z += shakeOffset.z
 
       // Expose transient red flash to the DOM overlay (no store churn)
       setCollisionFlash(effectsRef.current.tickFlash(dt))
@@ -294,7 +290,7 @@ export function GameWorld() {
 
       {/* Player car + camera both read the same controller state ref */}
       <PlayerCar stateRef={stateRef} />
-      <CameraManager targetRef={stateRef} cameraMode={cameraMode} />
+      <CameraManager targetRef={stateRef} cameraMode={cameraMode} effectsRef={effectsRef} />
 
       {/* HUD overlay is DOM, rendered by AppShell/GameRouter separately */}
     </group>

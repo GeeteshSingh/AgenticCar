@@ -1,3 +1,6 @@
+import { requestHorn } from '@/game/audio/drivingMix'
+import { vehicleKey } from '@/game/config/playerVehicles'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useEffect, useRef } from 'react'
 
 // Translates keyboard state into an abstract input-action object held in a
@@ -54,6 +57,9 @@ export function useKeyboardInput({ enabled = true } = {}) {
         case 'Space':
           a.handbrake = isDown
           break
+        case 'KeyH':
+          if (isDown) requestHorn()
+          break
         case 'KeyC':
           if (isDown) edgeQueueRef.current.push('toggleCamera')
           break
@@ -67,6 +73,8 @@ export function useKeyboardInput({ enabled = true } = {}) {
 
     const onKeyDown = (e) => {
       if (e.target instanceof HTMLElement && (e.target.closest('input, select, textarea, [contenteditable=true], .utility-panel, [data-radio-panel]'))) return
+      const vehicle = vehicleKey(e.code)
+      if (vehicle !== null && !e.repeat) useSettingsStore.getState().setSetting('vehicle', vehicle)
       if (pressedRef.current.has(e.code)) return // ignore auto-repeat
       pressedRef.current.add(e.code)
       // Prevent page scroll on arrows/space during play

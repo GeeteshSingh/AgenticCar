@@ -1,0 +1,4 @@
+[agents]
+enabled = true
+# Three children plus the primary; runtime limits still apply.
+max_concurrent_threads_per_session = 3

@@ -1,3 +1,4 @@
+import { playerVehicle } from '@/game/config/playerVehicles'
 import { useRef } from 'react'
 import { VEHICLE, KMH_TO_MS, steerAngleFor } from '@/game/config/vehicleConfig'
 import { useSettingsStore } from '@/stores/useSettingsStore'
@@ -64,7 +65,7 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
       accel -= VEHICLE.reversePower * brakeInput
     } else {
       // Auto-cruise toward a comfortable speed; boost (up arrow) pushes to max.
-      const targetSpeed = accelInput > 0 ? VEHICLE.maxSpeed : (settings.cruise ? VEHICLE.cruiseSpeed : 0)
+      const targetSpeed = accelInput > 0 ? playerVehicle(settings.vehicle).maxSpeed : (settings.cruise ? Math.min(VEHICLE.cruiseSpeed, playerVehicle(settings.vehicle).maxSpeed) : 0)
       if (s.speed < targetSpeed) {
         accel += VEHICLE.enginePower * (accelInput > 0 ? 1 : 0.6)
       } else if (s.speed > targetSpeed) {
@@ -78,7 +79,7 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
     if (s.speed > 0) accel -= VEHICLE.rollingResistance
 
     s.speed += accel * dt
-    if (s.speed > VEHICLE.maxSpeed) s.speed = VEHICLE.maxSpeed
+    s.speed = Math.min(s.speed, playerVehicle(settings.vehicle).maxSpeed)
     if (s.speed < -VEHICLE.maxReverseSpeed) s.speed = -VEHICLE.maxReverseSpeed
     // Clamp tiny speeds to rest
     if (Math.abs(s.speed) < 0.05) s.speed = 0
@@ -103,7 +104,7 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
     s.yaw += (yawTarget - s.yaw) * Math.min(1, 5 * dt)
 
     // --- Road boundary (soft) ---
-    const halfWidth = WORLD.roadWidth / 2 - VEHICLE.width / 2
+    const halfWidth = WORLD.roadWidth / 2 - playerVehicle(settings.vehicle).width / 2
     if (s.lateralX > halfWidth) {
       s.lateralX = halfWidth
       s.velX = Math.min(0, s.velX)

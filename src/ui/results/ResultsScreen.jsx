@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useGameStore } from '@/stores/useGameStore'
@@ -19,6 +20,20 @@ export function ResultsScreen() {
   const startRun = useGameStore((s) => s.startRun)
   const returnToMenu = useGameStore((s) => s.returnToMenu)
 
+  const dialog = useRef()
+  useEffect(() => {
+    const node = dialog.current
+    const trapFocus = event => {
+      if (event.key !== 'Tab') return
+      const buttons = [...node.querySelectorAll('button')]
+      const first = buttons[0], last = buttons.at(-1)
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    node.addEventListener('keydown', trapFocus)
+    return () => node.removeEventListener('keydown', trapFocus)
+  }, [])
+
   const stats = [
     ['Score', Math.round(score).toLocaleString()],
     ['Distance', `${(distanceMeters / 1000).toFixed(2)} km`],
@@ -30,8 +45,8 @@ export function ResultsScreen() {
   ]
 
   return (
-    <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-8">
+    <div ref={dialog} role="dialog" aria-modal="true" aria-label="Run results" className="absolute inset-0 z-30 overflow-y-auto bg-slate-950/55 backdrop-blur-sm flex flex-col items-center p-4 py-6 sm:py-10">
+      <div className="text-center mb-5 shrink-0">
         <h1
           className={`text-5xl font-black mb-2 ${
             missionComplete ? 'text-emerald-400' : 'text-red-400'
@@ -48,7 +63,7 @@ export function ResultsScreen() {
         </p>
       </div>
 
-      <Card className="w-full max-w-sm bg-slate-900/90 border-slate-700">
+      <Card className="w-full max-w-sm shrink-0 bg-slate-900/65 border-slate-500/60">
         <CardHeader>
           <CardTitle className="text-cyan-400 text-2xl text-center">Results</CardTitle>
         </CardHeader>
@@ -61,6 +76,7 @@ export function ResultsScreen() {
           ))}
           <div className="pt-3 space-y-2">
             <Button
+              autoFocus
               onClick={() => startRun(mode || 'endless')}
               className="w-full h-12 bg-cyan-600 hover:bg-cyan-500"
             >

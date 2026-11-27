@@ -94,3 +94,6 @@ assert(sm2.state.multiplier > 1, 'multiplier grows with collision-free distance'
 
 console.log(fail === 0 ? 'ALL SCORING TESTS PASSED' : fail + ' SCORING TESTS FAILED')
 process.exit(fail === 0 ? 0 : 1)
+
+assert(createNearMissDetector().detect({ playerX: 0, playerWidth: 2.4, vehicles: [{ ...v, width: 2, x: 2.1 }], playerSpeed: 100 }).length === 0, "wide player overlap cannot earn near miss")
+assert(createNearMissDetector().detect({ playerX: 0, playerWidth: .65, vehicles: [{ ...v, width: 2, x: 1.6 }], playerSpeed: 100 }).length === 1, "bicycle clearance earns near miss")
