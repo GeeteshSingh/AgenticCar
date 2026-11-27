@@ -19,20 +19,34 @@ assert(multiplierForDistance(1e9) === SCORE.multiplierMax, 'mult capped')
 
 // Overtake detector: counts a same-direction car once when it passes behind
 const od = createOvertakeDetector()
-const sameAhead = { id: 't1', direction: 1, z: 20 }
+const sameAhead = { id: 't1', active: true, direction: 1, z: 20 }
 od.registerAhead(sameAhead)
 assert(od.detect(0, [sameAhead]).length === 0, 'ahead not yet overtaken')
-const passed = od.detect(0, [{ id: 't1', direction: 1, z: -5 }])
+const passed = od.detect(0, [{ id: 't1', active: true, direction: 1, z: -5 }])
 assert(passed.length === 1 && passed[0] === 't1', 'counts once when behind')
-assert(od.detect(0, [{ id: 't1', direction: 1, z: -5 }]).length === 0, 'not double counted')
+assert(od.detect(0, [{ id: 't1', active: true, direction: 1, z: -5 }]).length === 0, 'not double counted')
 // collided vehicle is NOT credited
 const od2 = createOvertakeDetector()
-od2.registerAhead({ id: 'c1', direction: 1, z: 10 })
+od2.registerAhead({ id: 'c1', active: true, direction: 1, z: 10 })
 od2.markCollided('c1')
-assert(od2.detect(0, [{ id: 'c1', direction: 1, z: -5 }]).length === 0, 'collided not credited')
+assert(od2.detect(0, [{ id: 'c1', active: true, direction: 1, z: -5 }]).length === 0, 'collided not credited')
 // oncoming never counts as overtake
 const od3 = createOvertakeDetector()
-assert(od3.detect(0, [{ id: 'o1', direction: -1, z: -5 }]).length === 0, 'oncoming not overtake')
+assert(od3.detect(0, [{ id: 'o1', active: true, direction: -1, z: -5 }]).length === 0, 'oncoming not overtake')
+
+// Pooled inactive slots and unseen already-behind traffic cannot score.
+const cleanPass = createOvertakeDetector()
+assert(cleanPass.detect(0, [{ id: 'behind', active: true, direction: 1, z: -10 }]).length === 0, 'unseen behind traffic is not overtaken')
+assert(cleanPass.detect(0, [{ id: null, active: false, direction: 1, z: -100 }]).length === 0, 'inactive null pool slots cannot score')
+assert(cleanPass.detect(0, [{ id: '', active: true, direction: 1, z: -10 }]).length === 0, 'invalid IDs cannot score')
+cleanPass.detect(0, [{ id: 'departed', active: true, direction: 1, z: 20 }])
+cleanPass.detect(0, [])
+assert(cleanPass.detect(0, [{ id: 'departed', active: true, direction: 1, z: -10 }]).length === 0, 'departed uncredited encounter is forgotten')
+cleanPass.detect(0, [{ id: 'hit', active: true, direction: 1, z: 20 }])
+assert(cleanPass.detect(0, [{ id: 'hit', active: true, hit: true, direction: 1, z: -10 }]).length === 0, 'hit vehicle cannot score')
+cleanPass.detect(0, [])
+cleanPass.detect(0, [{ id: 'hit', active: true, direction: 1, z: 20 }])
+assert(cleanPass.detect(0, [{ id: 'hit', active: true, direction: 1, z: -10 }]).length === 1, 'departed collision state is pruned')
 
 // Near-miss detector: awards once per vehicle, requires speed + proximity
 const nd = createNearMissDetector()
