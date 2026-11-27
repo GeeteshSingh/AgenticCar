@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRadioStore } from '../../stores/useRadioStore'
+import { useGameStore } from '../../stores/useGameStore'
 import { getCountries, recordStationClick, searchStations } from '../../game/audio/catalog'
 import { createRadioPlayer } from '../../game/audio/player'
 import { MAX_PLAYLIST_BYTES, parsePlaylist } from '../../game/audio/playlist'
@@ -34,7 +35,13 @@ export function RadioPanel() {
     panelRef.current?.focus()
     return () => controller.abort()
   }, [radio.open])
-  const close = () => { radio.setOpen(false); toggleRef.current?.focus() }
+  const close = () => {
+    radio.setOpen(false)
+    const phase = useGameStore.getState().phase
+    const drivingCanvas = ['playing', 'paused'].includes(phase) ? document.querySelector('canvas[tabindex]') : null
+    if (drivingCanvas) drivingCanvas.focus()
+    else toggleRef.current?.focus()
+  }
   const play = async station => {
     const serial = ++serialRef.current
     radio.select(station)
@@ -82,8 +89,8 @@ export function RadioPanel() {
   const stations = lists[tab], index = stations.findIndex(s => s.id === radio.selected?.id)
   const changeStation = direction => { if (stations.length) play(stations[(index + direction + stations.length) % stations.length]) }
   const locationField = (field, value) => radio.setLocation({ ...radio.location, [field]: value })
-  return <div className="radio-root" onKeyDown={event => event.stopPropagation()} onKeyUp={event => event.stopPropagation()}>
-    <button ref={toggleRef} className="radio-toggle" onClick={() => radio.setOpen(!radio.open)} aria-expanded={radio.open} aria-controls="radio-panel">♫ {radio.status === 'playing' ? radio.selected?.name : 'Radio'} <span className="radio-state">{radio.status === 'loading' ? 'Connecting…' : ''}</span></button>
+  return <div className="radio-root" onKeyDown={event => { if (radio.open) event.stopPropagation() }} onKeyUp={event => { if (radio.open) event.stopPropagation() }}>
+    <button ref={toggleRef} className="radio-toggle" onClick={() => radio.open ? close() : radio.setOpen(true)} aria-expanded={radio.open} aria-controls="radio-panel">♫ {radio.status === 'playing' ? radio.selected?.name : 'Radio'} <span className="radio-state">{radio.status === 'loading' ? 'Connecting…' : ''}</span></button>
     {radio.open && <section id="radio-panel" ref={panelRef} tabIndex={-1} aria-label="Internet radio" className="radio-panel" onKeyDown={event => {
       if (event.key === 'Escape') { event.stopPropagation(); close() }
       event.stopPropagation()
