@@ -1,62 +1,26 @@
 import { useGameStore } from '@/stores/useGameStore'
-import { SpeedDisplay } from '@/ui/hud/SpeedDisplay'
-import { ScoreDisplay } from '@/ui/hud/ScoreDisplay'
-import { IntegrityDisplay } from '@/ui/hud/IntegrityDisplay'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { ObjectiveDisplay } from '@/ui/hud/ObjectiveDisplay'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import '../menus/experience.css'
 
-// DOM HUD overlay. Rendered above the R3F canvas while PLAYING or PAUSED.
-// Shows score + multiplier (top-left), speed (top-center), distance +
-// integrity (top-right), camera mode (bottom-left). Non-blocking so it never
-// covers road visibility.
 export function GameHUD() {
-  const distanceMeters = useGameStore((s) => s.distanceMeters)
-  const cameraMode = useGameStore((s) => s.cameraMode)
-
-  return (
-    <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
-      <div className="flex justify-between items-start gap-2">
-        <div className="pointer-events-auto">
-          <ScoreDisplay />
-        </div>
-
-        <Card className="bg-slate-900/70 border-slate-700 backdrop-blur-sm pointer-events-auto">
-          <CardContent className="py-3 px-4">
-            <SpeedDisplay />
-          </CardContent>
-        </Card>
-
-        <div className="flex flex-col items-end gap-2">
-          <Card className="bg-slate-900/70 border-slate-700 backdrop-blur-sm pointer-events-auto">
-            <CardContent className="py-3 px-4 text-right">
-              <div className="text-2xl font-bold text-emerald-300 tabular-nums leading-none">
-                {(distanceMeters / 1000).toFixed(2)}
-                <span className="text-sm text-slate-400 ml-1">km</span>
-              </div>
-              <div className="text-xs text-slate-500 tracking-widest mt-1">DISTANCE</div>
-            </CardContent>
-          </Card>
-          <div className="pointer-events-auto">
-            <IntegrityDisplay />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-end">
-        <div className="flex items-end gap-3">
-          <Badge variant="secondary" className="bg-slate-800/80 text-cyan-300 border border-slate-600">
-            {cameraMode === 'chase' ? 'CHASE (C)' : 'HOOD (C)'}
-          </Badge>
-          <ObjectiveDisplay />
-        </div>
-        <span className="text-xs text-slate-500 bg-slate-900/60 px-3 py-1 rounded-full backdrop-blur-sm pointer-events-none">
-          W/A/S/D or Arrows to drive · Space handbrake · C camera · Esc pause
-        </span>
-      </div>
+  const speed = useGameStore(s => s.speedKmh)
+  const distance = useGameStore(s => s.distanceMeters)
+  const integrity = useGameStore(s => s.integrity)
+  const score = useGameStore(s => s.score)
+  const mode = useGameStore(s => s.mode)
+  const camera = useGameStore(s => s.cameraMode)
+  const pause = useGameStore(s => s.pause)
+  const environment = useSettingsStore(s => s.environment)
+  const relaxed = mode === 'relaxed'
+  return <div className="drive-hud" aria-label="Driving instruments">
+    <div className="drive-hud-context"><span>{environment}</span><span>{camera} view</span><button className="drive-hud-pause" onClick={pause}>Pause</button></div>
+    {!relaxed && <div className="drive-hud-objective"><ObjectiveDisplay /></div>}
+    <div className="drive-hud-dashboard">
+      <div className="drive-hud-speed" aria-label={`${Math.round(Math.abs(speed))} kilometers per hour`}>{Math.round(Math.abs(speed))}<small>km/h{speed < 0 ? ' · R' : ''}</small></div>
+      <div className="drive-hud-stat">{(distance / 1000).toFixed(2)}<small>kilometers</small></div>
+      {!relaxed && <><div className="drive-hud-stat">{Math.round(integrity)}%<small>integrity</small></div><div className="drive-hud-stat">{Math.round(score).toLocaleString()}<small>score</small></div></>}
     </div>
-  )
+  </div>
 }
-
 export default GameHUD
-

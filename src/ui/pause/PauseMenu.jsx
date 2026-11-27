@@ -1,34 +1,17 @@
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useGameStore } from '@/stores/useGameStore'
+import '../menus/experience.css'
 
-// Pause overlay shown when phase === 'paused'. Restart/return-to-menu are
-// stubs until results + reset land in Phase 4; for now resume is primary.
 export function PauseMenu() {
-  const resume = useGameStore((s) => s.resume)
-  const returnToMenu = useGameStore((s) => s.returnToMenu)
-
-  return (
-    <div className="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
-      <Card className="w-full max-w-sm bg-slate-900/90 border-slate-700">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl text-cyan-400">PAUSED</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button onClick={resume} className="w-full h-12 bg-cyan-600 hover:bg-cyan-500">
-            Resume
-          </Button>
-          <Button
-            onClick={returnToMenu}
-            variant="outline"
-            className="w-full h-12 border-slate-600 text-slate-300 hover:bg-slate-800"
-          >
-            Return to Menu
-          </Button>
-        </CardContent>
-      </Card>
+  const resume = useGameStore(s => s.resume)
+  const restart = useGameStore(s => s.startRun)
+  const mode = useGameStore(s => s.mode)
+  const menu = useGameStore(s => s.returnToMenu)
+  return <section className="drive-pause" aria-labelledby="pause-title">
+    <div className="drive-pause-content"><h1 id="pause-title">Take a breath.</h1><p>Your drive is paused. Continue whenever you’re ready.</p>
+      <div className="drive-pause-actions"><Button className="drive-start" onClick={resume}>Resume driving</Button><Button variant="outline" onClick={() => restart(mode || 'relaxed')}>Restart drive</Button><Button variant="ghost" onClick={menu}>Return to main menu</Button></div>
+      <p className="drive-pause-note">Settings and Radio remain available in the corners of the screen. Your radio keeps playing while you pause.</p>
     </div>
-  )
+  </section>
 }
-
 export default PauseMenu
