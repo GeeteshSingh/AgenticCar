@@ -51,3 +51,9 @@ assert.equal(createVehicleState().lateralX, laneCenterX(2))
 const camera = new THREE.PerspectiveCamera(60, 1, .1, 1000)
 camera.position.set(0,4,-10); camera.lookAt(0,0,10); camera.updateMatrixWorld()
 assert.ok(new THREE.Vector3(2,0,10).project(camera).x < new THREE.Vector3(-2,0,10).project(camera).x)
+
+// Explicit alternating requests keep both directions visible even with biased RNG.
+for (const direction of [-1, 1, -1, 1]) {
+  const car = trySpawnVehicle({activeVehicles: [], t: 0, random: () => 0.1, preferredDirection: direction})
+  assert.equal(car.direction, direction)
+}

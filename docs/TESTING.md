@@ -29,3 +29,5 @@ Browser access host subsequently became unavailable; native UI snapshots stopped
 ## Indian route checks
 
 Regional seeded profile/relative origin/seam/slope tests pass for all four routes. India lane centers/directions and player spawn test pass; Three.js projection confirms +X is screen-left for forward camera. Settings tests cover route preset weather/time. Full npm test, lint and production build pass. Browser Indian scenery/glyph/transition acceptance remains unverified because browser host is unavailable.
+
+Mixed-direction traffic update: spawning now prefers oncoming first, then alternates direction after successful spawns. Safe-lane checks can fall back to another lane when preferred lanes are blocked. Biased-RNG regression confirms explicit oncoming/same-direction requests; full tests/lint/build pass. Browser visual verification remains pending.

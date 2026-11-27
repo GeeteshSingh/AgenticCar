@@ -45,6 +45,7 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
       rev: 0,
     })),
   )
+  const nextDirectionRef = useRef(-1)
   const spawnTimerRef = useRef(0)
   const [, forceRender] = useState(0)
 
@@ -52,6 +53,7 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
   if (active && lastToken.current !== runToken) {
     lastToken.current = runToken
     resetSpawnCounter()
+    nextDirectionRef.current = -1
     spawnTimerRef.current = 0
     for (const v of poolRef.current) {
       v.active = false
@@ -125,8 +127,10 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
           .map((v) => ({ lane: v.lane, z: v.z, length: v.length })),
         t,
         playerZ: 0,
+        preferredDirection: nextDirectionRef.current,
       })
       if (spec) {
+        nextDirectionRef.current = -spec.direction
         const slot = poolRef.current.find((v) => !v.active)
         if (slot) {
           Object.assign(slot, spec, { active: true, hit: false, flash: 0, x: laneX(spec.lane), rev: slot.rev + 1 })

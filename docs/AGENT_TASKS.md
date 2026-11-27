@@ -116,3 +116,5 @@ User authorized complete product implementation under the attached master specif
 | R01–R04 | radio_impl | 42c5f91 | codex/radio-system; /private/tmp/agenticcar-radio | src/game/audio/**, src/ui/radio/**, useRadioStore.js, radio.test.mjs | IN_PROGRESS | Pending |
 
 Contracts accepted for this batch: read speed from playerStateRef.current.speed; reset only on new session mount; flush terminal snapshot; challenge activation baselines; one persistent native audio player independent of session mounting. Radio continues through pause/menu/restart with explicit stop; no autoplay after refresh. HTTPS station discovery, manual location filters, best-effort city metadata; native-only HLS with clear unsupported feedback. Dependency-free approach first.
+
+Mixed-direction traffic update: spawning now prefers oncoming first, then alternates direction after successful spawns. Safe-lane checks can fall back to another lane when preferred lanes are blocked. Biased-RNG regression confirms explicit oncoming/same-direction requests; full tests/lint/build pass. Browser visual verification remains pending.

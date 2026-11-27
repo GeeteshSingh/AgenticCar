@@ -30,13 +30,13 @@ function pickSpeed(direction, t, random) {
 // Try to spawn one vehicle. Returns a vehicle spec, or null if unsafe.
 // activeVehicles: array of live vehicle states (for occupancy).
 // t: normalized difficulty 0..1. playerZ: number (default 0).
-export function trySpawnVehicle({ activeVehicles, t, playerZ = 0, random = Math.random }) {
+export function trySpawnVehicle({ activeVehicles, t, playerZ = 0, random = Math.random, preferredDirection = null }) {
   const laneOccupancy = buildLaneOccupancy(activeVehicles)
   const type = pickType(random)
   const candidateZ =
     TRAFFIC.spawnDistanceMin + random() * (TRAFFIC.spawnDistance - TRAFFIC.spawnDistanceMin)
 
-  const lane = pickSafeLane({ candidateZ, length: type.length, laneOccupancy, playerZ, random })
+  const lane = pickSafeLane({ candidateZ, length: type.length, laneOccupancy, playerZ, random, preferredLanes: TRAFFIC.laneDirections.flatMap((direction, index) => direction === preferredDirection ? [index] : []) })
   if (lane < 0) return null
 
   const direction = TRAFFIC.laneDirections[lane]
