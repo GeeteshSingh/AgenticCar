@@ -1,20 +1,37 @@
 import { safeRadioUrl } from './catalog.js'
-export function createRadioPlayer({ audioElement }) {
+export function createRadioPlayer({ audioElement, timeoutMs = 20000, schedule = setTimeout, cancel = clearTimeout }) {
   const audio = audioElement
   audio.preload = 'none'
   let state = { stationId: null, status: 'idle', volume: .5, muted: false, errorCode: '' }
   let revision = 0, disposed = false, timer
   const listeners = new Set()
   const publish = patch => { state = { ...state, ...patch }; for (const fn of listeners) fn(state) }
-  const clearTimer = () => { clearTimeout(timer); timer = undefined }
+  const clearTimer = () => { cancel(timer); timer = undefined }
   const matches = () => !disposed && !!state.stationId
+  const armWatchdog = () => {
+    if (timer !== undefined) return
+    const attempt = revision
+    timer = schedule(() => {
+      timer = undefined
+      if (attempt === revision && state.status === 'loading') {
+        revision++
+        publish({ status: 'error', errorCode: 'Stream connection timed out. Retry or select another station.' })
+        audio.pause()
+      }
+    }, timeoutMs)
+  }
+  const buffering = () => {
+    if (matches() && !audio.paused && state.status !== 'error') {
+      publish({ status: 'loading' }); armWatchdog()
+    }
+  }
   const events = {
-    playing: () => { if (matches()) { clearTimer(); publish({ status: 'playing', errorCode: '' }) } },
-    waiting: () => { if (matches() && !audio.paused && state.status !== 'error') publish({ status: 'loading' }) },
-    stalled: () => { if (matches() && !audio.paused && state.status !== 'error') publish({ status: 'loading' }) },
-    pause: () => { if (matches() && state.status !== 'error') publish({ status: 'paused' }) },
-    ended: () => { if (matches()) publish({ status: 'paused' }) },
-    error: () => { if (matches()) { clearTimer(); publish({ status: 'error', errorCode: 'Stream unavailable or format unsupported. Try another station.' }) } },
+    playing: () => { if (matches() && !audio.paused && state.status !== 'error') { clearTimer(); publish({ status: 'playing', errorCode: '' }) } },
+    waiting: buffering,
+    stalled: buffering,
+    pause: () => { if (matches() && audio.paused && state.status !== 'error') { clearTimer(); publish({ status: 'paused' }) } },
+    ended: () => { if (matches() && audio.ended) { clearTimer(); publish({ status: 'paused' }) } },
+    error: () => { if (matches() && audio.error) { revision++; clearTimer(); publish({ status: 'error', errorCode: 'Stream unavailable or format unsupported. Try another station.' }); audio.pause() } },
   }
   for (const [event, listener] of Object.entries(events)) audio.addEventListener(event, listener)
   function stop() {
@@ -32,9 +49,7 @@ export function createRadioPlayer({ audioElement }) {
     const changed = audio.getAttribute('src') !== streamUrl
     if (changed) { audio.pause(); audio.src = streamUrl; audio.load() }
     publish({ stationId: station.id, status: 'loading', errorCode: '' })
-    timer = setTimeout(() => {
-      if (attempt === revision && state.status === 'loading') { revision++; audio.pause(); publish({ status: 'error', errorCode: 'Stream connection timed out. Retry or select another station.' }) }
-    }, 20000)
+    armWatchdog()
     try {
       await audio.play()
       if (disposed || attempt !== revision) return false
