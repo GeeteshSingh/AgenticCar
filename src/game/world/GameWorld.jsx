@@ -162,8 +162,8 @@ export function GameWorld() {
       distanceRef.current += dMeters
       survivalRef.current += dt
       topSpeedRef.current = Math.max(topSpeedRef.current, s.speed)
-      const road = sampleRoad(distanceRef.current)
-      const ahead = roadFrame(15, distanceRef.current)
+      const road = sampleRoad(distanceRef.current, 1, settings.environment)
+      const ahead = roadFrame(15, distanceRef.current, 1, settings.environment)
       s.roadHeading = road.heading
       s.roadPitch = road.pitch
       s.lookX = ahead.x

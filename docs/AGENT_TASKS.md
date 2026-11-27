@@ -1,3 +1,15 @@
+# Indian route task update
+
+| ID | Owner | Files / branch | Status and evidence |
+|---|---|---|---|
+| I01 | india_world | roadProfile, EndlessHighway, Environment, RouteLandmarks, world.test; codex/indian-environments | MERGED locally c3a06e5; regional determinism/seam/gradient tests pass; independent radio_impl review passed |
+| I02 | Lead | environmentConfig, settings/menu/HUD, shared road mapping, LHT and traffic transform | Implemented; regression/build/lint pass; independent traffic_impl integration review passed (source only) |
+| I03 | Lead QA | Browser Indian scene/route switch/landmark glyphs | BLOCKED browser host unavailable; not visually verified |
+
+Stable stored IDs retained. No third-party map data/assets or new dependencies added. Procedural scenes are inspired by regions, not real-road replicas. Prior tasks/checkpoints below are preserved.
+
+---
+
 # Current task state — execution checkpoint
 
 All initial discovery is complete. Implementation authorized. This table supersedes historical setup statuses below.

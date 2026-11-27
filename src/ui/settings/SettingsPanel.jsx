@@ -1,3 +1,4 @@
+import { INDIAN_ROUTES } from '@/game/config/environmentConfig'
 import { useState } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useGameStore } from '@/stores/useGameStore'
@@ -13,7 +14,7 @@ export function SettingsPanel() {
       {settings.audioError && <p role="status">{settings.audioError}</p>}
       {settings.persistenceError && <p role="status">{settings.persistenceError}</p>}
       <p className="text-sm text-slate-400">Preferences save on this device. Resume driving when ready.</p>
-      {Object.entries({environment:['countryside','forest','desert','coast'],time:['day','sunset','night','sunrise'],weather:['clear','fog','rain'],quality:['low','medium','high'],camera:['chase','hood']}).map(([key, options])=><label key={key} className="grid grid-cols-2 items-center gap-4 capitalize">{key}<select value={settings[key]} onChange={e=>{settings.setSetting(key,e.target.value);if(key==='camera')useGameStore.setState({cameraMode:e.target.value})}}>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}
+      {Object.entries({environment:['countryside','forest','desert','coast'],time:['day','sunset','night','sunrise'],weather:['clear','fog','rain'],quality:['low','medium','high'],camera:['chase','hood']}).map(([key, options])=><label key={key} className="grid grid-cols-2 items-center gap-4 capitalize">{key}<select value={settings[key]} onChange={e=>{settings.setSetting(key,e.target.value);if(key==='camera')useGameStore.setState({cameraMode:e.target.value})}}>{options.map(v=><option key={v} value={v}>{key === 'environment' ? INDIAN_ROUTES[v].name : v}</option>)}</select></label>)}
       <label>Steering sensitivity <input aria-label="Steering sensitivity" type="range" min="0.4" max="2" step="0.1" value={settings.sensitivity} onChange={e=>settings.setSetting('sensitivity',+e.target.value)}/></label>
       <label>Engine and wind volume <input aria-label="Engine and wind volume" type="range" min="0" max="1" step=".01" value={settings.engineVolume} onChange={e=>settings.setSetting('engineVolume',+e.target.value)}/></label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.cruise} onChange={e=>settings.setSetting('cruise',e.target.checked)}/> Cruise assist</label>

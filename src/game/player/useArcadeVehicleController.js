@@ -18,7 +18,7 @@ import { WORLD } from '@/game/config/gameConfig'
 export function createVehicleState() {
   return {
     speed: 0,
-    lateralX: 0,
+    lateralX: WORLD.laneWidth / 2,
     steer: 0,
     yaw: 0,
     velX: 0, // lateral velocity (m/s)

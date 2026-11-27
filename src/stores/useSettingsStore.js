@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-const defaults = { environment: 'countryside', time: 'day', weather: 'clear', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.12, camera: 'chase', cycle: false }
+import { INDIAN_ROUTES } from '../game/config/environmentConfig.js'
+const defaults = { environment: 'forest', time: 'day', weather: 'fog', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.12, camera: 'chase', cycle: false }
 function restore() {
   try { return JSON.parse(localStorage.getItem('agenticcar-settings') || '{}') } catch { return {} }
 }
@@ -18,7 +19,8 @@ export const useSettingsStore = create((set, get) => ({
   persistenceError: '',
   audioError: '',
   setSetting: (key, value) => {
-    const next = sanitize({ ...get(), [key]: value })
+    const preset = key === 'environment' ? INDIAN_ROUTES[value] : null
+    const next = sanitize({ ...get(), ...(preset ? {weather: preset.weather, time: preset.time} : {}), [key]: value })
     set(next)
     try { localStorage.setItem('agenticcar-settings', JSON.stringify(next)); set({persistenceError: ''}) } catch { set({persistenceError: 'Settings could not be saved. Your changes work for this session only.'}) }
   },

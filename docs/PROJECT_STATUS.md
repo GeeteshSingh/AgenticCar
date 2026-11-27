@@ -1,3 +1,13 @@
+# Indian environments milestone — 2026-11-27
+
+Implemented four Indian-inspired procedural route presets: Western Ghats, Thar Desert, Konkan Coast and Deccan Plateau. They have distinct road bend/grade, terrain, vegetation and distant scenery, plus pooled original India/KEEP LEFT signs and kilometer stones. Menu preview, HUD and settings use the selected route. Stable saved environment keys retained; route selection applies appropriate time/weather defaults. Manual radio location remains independent.
+
+India LHT: lanes[-1,-1,1,1] for world +z travel; player spawns at +2 in the left carriageway. Removed duplicated traffic child transforms so visual positions match collision coordinates. World/player/traffic/camera share the selected profile.
+
+Agent india_world owns codex/indian-environments at /private/tmp/agenticcar-india. World commit c5a6006 integrated as c3a06e5 after independent radio_impl review. Regional profile tests and settings/traffic projection regressions pass; full npm test/lint/build pass. Four existing lint warnings and bundle warning remain. Browser connection remains unavailable, so rendered Indian landscapes, Hindi glyphs and transitions are NOT manually verified.
+
+---
+
 # Current execution checkpoint — 2026-11-27
 
 Current phase: integrated implementation and QA (Phases 2–8 delivered in code; Phases 9–10 acceptance/release not complete). Branch codex/multi-agent-setup. Preserve all original setup files below and resume from this checkpoint rather than repeating discovery.

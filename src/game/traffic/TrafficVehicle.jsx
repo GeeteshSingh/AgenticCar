@@ -1,22 +1,8 @@
-import { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
 
 // Visual primitive for one traffic vehicle. Transform (z, x, facing) is driven
-// each frame by TrafficManager's pooled state; this component only reads the
-// ref. Low-poly sedan/van/truck body with working lights. Oncoming vehicles
+// only by TrafficManager's parent PoolSlot; this component stays local. Low-poly sedan/van/truck body with working lights. Oncoming vehicles
 // show bright headlights toward the player; same-direction show tail-lights.
 export function TrafficVehicle({ vehicleRef }) {
-  const groupRef = useRef()
-
-  useFrame(() => {
-    const g = groupRef.current
-    const s = vehicleRef
-    if (!g || !s) return
-    g.position.z = s.z ?? 0
-    g.position.x = s.x ?? 0
-    g.rotation.y = s.direction < 0 ? Math.PI : 0
-  })
-
   const w = vehicleRef?.width ?? 2
   const l = vehicleRef?.length ?? 4
   const h = vehicleRef?.height ?? 1.4
@@ -24,7 +10,7 @@ export function TrafficVehicle({ vehicleRef }) {
   const flashed = (vehicleRef?.flash ?? 0) > 0
 
   return (
-    <group ref={groupRef}>
+    <group>
       {/* Lower body */}
       <mesh castShadow position={[0, h * 0.3, 0]}>
         <boxGeometry args={[w, h * 0.42, l]} />

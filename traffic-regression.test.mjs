@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
 import { trySpawnVehicle } from '@/game/traffic/trafficSpawner'
+import * as THREE from 'three'
+import { createVehicleState } from '@/game/player/useArcadeVehicleController'
+import { laneCenterX } from '@/game/config/trafficConfig'
 import { TRAFFIC } from '@/game/config/trafficConfig'
 import { DIFFICULTY } from '@/game/config/difficultyConfig'
 import { readPlayerSpeed, trafficDeltaZ, trafficStep } from '@/game/traffic/trafficSimulation'
@@ -40,3 +43,11 @@ const a = trySpawnVehicle({ activeVehicles: [], t: 0.5, random: seeded(8) })
 const b = trySpawnVehicle({ activeVehicles: [], t: 0.5, random: seeded(8) })
 assert.deepEqual({ ...a, id: null }, { ...b, id: null })
 console.log('ALL TRAFFIC REGRESSION TESTS PASSED')
+
+// India drives on the left: the forward-facing camera mirrors world X.
+assert.deepEqual([0,1,2,3].map(laneCenterX), [-6,-2,2,6])
+assert.deepEqual(TRAFFIC.laneDirections, [-1,-1,1,1])
+assert.equal(createVehicleState().lateralX, laneCenterX(2))
+const camera = new THREE.PerspectiveCamera(60, 1, .1, 1000)
+camera.position.set(0,4,-10); camera.lookAt(0,0,10); camera.updateMatrixWorld()
+assert.ok(new THREE.Vector3(2,0,10).project(camera).x < new THREE.Vector3(-2,0,10).project(camera).x)

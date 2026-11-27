@@ -299,3 +299,5 @@
 .drive-environments button {
   padding-inline:11px}
 }
+
+.drive-route-description { max-width: 490px; color: #b6ceca; font-size: 13px; line-height: 1.5; margin: 12px 0 0; }

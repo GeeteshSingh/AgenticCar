@@ -1,3 +1,4 @@
+import { routeName } from '@/game/config/environmentConfig'
 import { useGameStore } from '@/stores/useGameStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { ObjectiveDisplay } from '@/ui/hud/ObjectiveDisplay'
@@ -14,7 +15,7 @@ export function GameHUD() {
   const environment = useSettingsStore(s => s.environment)
   const relaxed = mode === 'relaxed'
   return <div className="drive-hud" aria-label="Driving instruments">
-    <div className="drive-hud-context"><span>{environment}</span><span>{camera} view</span><button className="drive-hud-pause" onClick={pause}>Pause</button></div>
+    <div className="drive-hud-context"><span>{routeName(environment)}</span><span>{camera} view</span><button className="drive-hud-pause" onClick={pause}>Pause</button></div>
     {!relaxed && <div className="drive-hud-objective"><ObjectiveDisplay /></div>}
     <div className="drive-hud-dashboard">
       <div className="drive-hud-speed" aria-label={`${Math.round(Math.abs(speed))} kilometers per hour`}>{Math.round(Math.abs(speed))}<small>km/h{speed < 0 ? ' · R' : ''}</small></div>

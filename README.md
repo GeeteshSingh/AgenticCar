@@ -22,7 +22,7 @@ npm run preview  # Serve the production build locally after building
 
 ## Your drive
 
-Pick Countryside, Forest, Desert or Coast. Free Drive has no vehicle damage or required objectives; Endless and Mission retain traffic scoring and integrity. Settings controls quality, steering sensitivity, cruise assist, camera, engine/wind volume, time of day, automatic day/night cycling and clear/fog/rain weather. Preferences save on this device. Pause preserves your run; Restart starts a fresh run. Returning to the menu ends the current run.
+Pick Western Ghats (misty forested climbs), Thar Desert (dunes and scrub), Konkan Coast (palms and sea), or Deccan Plateau (farmland and basalt hills). These are generated Indian-inspired landscapes, not geographic replicas. The menu previews the selected route. Traffic follows India's left-hand convention. Free Drive has no vehicle damage or required objectives; Endless and Mission retain traffic scoring and integrity. Settings controls quality, steering sensitivity, cruise assist, camera, engine/wind volume, time of day, automatic day/night cycling and clear/fog/rain weather. Preferences save on this device. Pause preserves your run; Restart starts a fresh run. Returning to the menu ends the current run.
 
 | Key | Action |
 |---|---|

@@ -25,3 +25,7 @@ Browser access host subsequently became unavailable; native UI snapshots stopped
 - Radio while driving/pause/restart/environment switch; no duplicate audio.
 - At least 20-minute drive: seams, scene counts, memory/draw calls, frame timing and console/network.
 - npm run build then npm run preview; repeat core journey against production output.
+
+## Indian route checks
+
+Regional seeded profile/relative origin/seam/slope tests pass for all four routes. India lane centers/directions and player spawn test pass; Three.js projection confirms +X is screen-left for forward camera. Settings tests cover route preset weather/time. Full npm test, lint and production build pass. Browser Indian scenery/glyph/transition acceptance remains unverified because browser host is unavailable.

@@ -1,3 +1,4 @@
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useGameStore } from '@/stores/useGameStore'
 import { roadFrame } from '@/game/world/roadProfile'
 import { useRef, useState } from 'react'
@@ -154,7 +155,7 @@ function PoolSlot({ vehicle, distanceRef }) {
     if (!g) return
     g.visible = vehicle.active
     g.position.z = vehicle.z
-    const road = roadFrame(vehicle.z, distanceRef.current)
+    const road = roadFrame(vehicle.z, distanceRef.current, 1, useSettingsStore.getState().environment)
     g.position.x = vehicle.x + road.x
     g.position.y = road.y
     g.rotation.y = road.heading + (vehicle.direction < 0 ? Math.PI : 0)

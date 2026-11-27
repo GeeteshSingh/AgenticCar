@@ -25,10 +25,11 @@ export const TRAFFIC = {
     { id: 'sport', color: '#22c55e', width: 1.9, length: 4.0, height: 1.2 },
   ],
 
+  // Indian left-hand traffic: forward +z has its left side at world +x.
   // Lane directions. length must match WORLD.laneCount (4).
   //  +1 = same direction as player (player overtakes, slower)
   //  -1 = oncoming (approaches player head-on)
-  laneDirections: [1, 1, -1, -1],
+  laneDirections: [-1, -1, 1, 1],
 
   // Min gap (meters in z) required between consecutive same-lane vehicles.
   minGap: 16,
