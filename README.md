@@ -55,3 +55,7 @@ Troubleshooting: run `npm ci` if Vite/Oxlint is missing; use a supported Node ve
 Vehicle keys: 1 Thar-inspired SUV, 2 truck, 3 bicycle, 4 hatchback, 5 sedan, 6 auto rickshaw, 7 motorcycle, 8 bus, 9 pickup. Original procedural designs; no manufacturer models or logos. Speed limits and collision dimensions follow the selected vehicle.
 
 Collision feedback includes a synthesized impact sound (controlled by engine volume), red vignette and camera shake; reduced-motion preference suppresses shake. The results overlay keeps the stopped scene visible. Use **C** or the HUD View button to cycle chase, hood and a stylized right-hand-drive cockpit; bicycles and motorcycles use handlebars. The HUD Vehicles button opens the 1–9 selection shortcuts.
+
+## Deploy
+
+For Cloudflare Pages, set the build command to `npm run build`, the output directory to `dist`, and the environment variable `NODE_VERSION` to `22`.
