@@ -67,7 +67,7 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
       // Auto-cruise toward a comfortable speed; boost (up arrow) pushes to max.
       const targetSpeed = accelInput > 0 ? playerVehicle(settings.vehicle).maxSpeed : (settings.cruise ? Math.min(VEHICLE.cruiseSpeed, playerVehicle(settings.vehicle).maxSpeed) : 0)
       if (s.speed < targetSpeed) {
-        accel += VEHICLE.enginePower * (accelInput > 0 ? 1 : 0.6)
+        accel += (playerVehicle(settings.vehicle).enginePower ?? VEHICLE.enginePower) * (accelInput > 0 ? 1 : 0.6)
       } else if (s.speed > targetSpeed) {
         // Gentle coast-down when above the target speed without braking.
         accel -= VEHICLE.rollingResistance

@@ -9,9 +9,25 @@ export const PLAYER_VEHICLES = [
   {name:'Touring motorcycle',type:'bike',color:'#49667a',width:.8,length:2.2,height:1.4,maxSpeed:150},
   {name:'Intercity bus',type:'bus',color:'#ece4cc',width:2.4,length:8,height:2.9,maxSpeed:105},
   {name:'Farm pickup',type:'pickup',color:'#54816e',width:1.95,length:5,height:1.8,maxSpeed:140},
+  {name:'Lamborghini-inspired supercar',type:'supercar',color:'#e8c228',width:2.02,length:4.7,height:1.15,maxSpeed:400,enginePower:110},
 ]
+export const CHEAT_VEHICLE_INDEX = 9
 export const playerVehicle = index => PLAYER_VEHICLES[index] || PLAYER_VEHICLES[0]
 export function vehicleKey(code) {
   const match = /^(?:Digit|Numpad)([1-9])$/.exec(code)
   return match ? Number(match[1])-1 : null
+}
+
+// Two separate 1 key presses within one second; holding the key never counts.
+export function createVehicleKeySelector() {
+  let lastOne = -Infinity
+  return {
+    select(code, now) {
+      const selected = vehicleKey(code)
+      const cheat = selected === 0 && now - lastOne <= 1000 && now >= lastOne
+      lastOne = selected === 0 && !cheat ? now : -Infinity
+      return cheat ? CHEAT_VEHICLE_INDEX : selected
+    },
+    reset() { lastOne = -Infinity },
+  }
 }

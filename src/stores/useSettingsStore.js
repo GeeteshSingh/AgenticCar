@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { PLAYER_VEHICLES } from '../game/config/playerVehicles.js'
 import { INDIAN_ROUTES } from '../game/config/environmentConfig.js'
 const defaults = { vehicle: 0, environment: 'forest', time: 'day', weather: 'fog', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.45, camera: 'chase', cycle: true }
 function restore() {
@@ -17,7 +18,7 @@ const choices = {environment: ['countryside','forest','desert','coast','kashmir'
 function sanitize(values) {
   if (!values || typeof values !== 'object' || Array.isArray(values)) values = {}
   const out = { ...defaults }
-  if (Number.isInteger(values.vehicle) && values.vehicle >= 0 && values.vehicle < 9) out.vehicle = values.vehicle
+  if (Number.isInteger(values.vehicle) && values.vehicle >= 0 && values.vehicle < PLAYER_VEHICLES.length) out.vehicle = values.vehicle
   for (const [key, list] of Object.entries(choices)) if (list.includes(values[key])) out[key] = values[key]
   if (Number.isFinite(values.sensitivity)) out.sensitivity = Math.max(.4, Math.min(2, values.sensitivity))
   if (Number.isFinite(values.engineVolume)) out.engineVolume = Math.max(0, Math.min(1, values.engineVolume))

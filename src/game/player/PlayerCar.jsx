@@ -34,7 +34,11 @@ export function PlayerCar({stateRef}) {
     </> : <>
       <Box size={[w,.35,l]} position={[0,.55,0]} color={v.color}/>
       <Box size={[w*.9,.22,l*.94]} position={[0,.32,0]} color="#293039"/>
-      {v.type==='truck' ? <>
+      {v.type==='supercar' ? <>
+        <Box size={[w*.78,.28,l*.42]} position={[0,.78,-l*.08]} color="#172c34"/>
+        <Box size={[w*.84,.09,l*.3]} position={[0,.59,l*.32]} color={v.color}/>
+        <Box size={[w*.9,.08,.22]} position={[0,.94,-l*.43]} color="#222a2e"/>
+      </> : v.type==='truck' ? <>
         <Box size={[w,h*.45,l*.27]} position={[0,h*.35,l*.32]} color={v.color}/>
         <Box size={[w*.86,h*.22,.06]} position={[0,h*.48,l*.46]} color="#233c47"/>
         <Box size={[w*.96,h*.65,l*.62]} position={[0,h*.48,-l*.16]} color="#a1a8a0"/>

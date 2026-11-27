@@ -32,6 +32,7 @@ Pick Western Ghats (misty forested climbs), Thar Desert (dunes and scrub), Konka
 | Space | Handbrake |
 | C | Chase/hood camera |
 | 1–9 | Switch vehicle (also available in Settings) |
+| 11 | Press 1 twice quickly for the 400 km/h cheat supercar |
 | Escape | Pause/resume; close an open utility panel first |
 
 Cruise assist accelerates automatically when enabled. Coarse-pointer devices show touch controls; desktop is the primary target.

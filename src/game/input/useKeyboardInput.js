@@ -1,5 +1,5 @@
 import { requestHorn } from '@/game/audio/drivingMix'
-import { vehicleKey } from '@/game/config/playerVehicles'
+import { createVehicleKeySelector } from '@/game/config/playerVehicles'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useEffect, useRef } from 'react'
 
@@ -25,6 +25,7 @@ export function useKeyboardInput({ enabled = true } = {}) {
   })
   const edgeQueueRef = useRef([])
   const pressedRef = useRef(new Set())
+  const vehicleSelector = useRef(createVehicleKeySelector())
 
   useEffect(() => {
     if (!enabled) return
@@ -73,8 +74,9 @@ export function useKeyboardInput({ enabled = true } = {}) {
 
     const onKeyDown = (e) => {
       if (e.target instanceof HTMLElement && (e.target.closest('input, select, textarea, [contenteditable=true], .utility-panel, [data-radio-panel]'))) return
-      const vehicle = vehicleKey(e.code)
-      if (vehicle !== null && !e.repeat) useSettingsStore.getState().setSetting('vehicle', vehicle)
+      if (e.repeat || pressedRef.current.has(e.code)) return
+      const vehicle = vehicleSelector.current.select(e.code, performance.now())
+      if (vehicle !== null) useSettingsStore.getState().setSetting('vehicle', vehicle)
       if (pressedRef.current.has(e.code)) return // ignore auto-repeat
       pressedRef.current.add(e.code)
       // Prevent page scroll on arrows/space during play
@@ -91,6 +93,7 @@ export function useKeyboardInput({ enabled = true } = {}) {
       // Release everything if focus is lost
       actionsRef.current = { accelerate: 0, brake: 0, steer: 0, handbrake: false }
       pressedRef.current.clear()
+      vehicleSelector.current.reset()
     }
 
     window.addEventListener('keydown', onKeyDown)
