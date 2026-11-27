@@ -21,3 +21,8 @@ for (const expected of ['hood', 'interior', 'chase']) {
   store.getState().toggleCameraMode()
   assert.equal(store.getState().cameraMode, expected)
 }
+store.getState().recordRoadFind({id: 'sample', name: 'Sample', distance: 160})
+store.getState().recordRoadFind({id: 'sample', name: 'Sample', distance: 560})
+assert.equal(store.getState().roadFinds.length, 1, 'each billboard brand appears once per session')
+store.getState().startRun('endless')
+assert.deepEqual(store.getState().roadFinds, [], 'new run clears previous finds')

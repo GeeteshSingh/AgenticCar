@@ -3,6 +3,7 @@ let saved = 'null'
 globalThis.localStorage = {getItem: () => saved, setItem: (_, value) => {saved = value}}
 const {useSettingsStore: store} = await import('./src/stores/useSettingsStore.js')
 assert.equal(store.getState().environment, 'forest')
+assert.equal(store.getState().cycle, true)
 store.getState().setSetting('sensitivity', 100)
 assert.equal(store.getState().sensitivity, 2)
 store.getState().setSetting('environment', 'coast')
@@ -19,3 +20,10 @@ assert.equal(store.getState().time, 'sunset')
 
 store.getState().setSetting('camera', 'interior')
 assert.equal(store.getState().camera, 'interior')
+
+store.getState().setSetting('environment', 'kashmir')
+assert.equal(store.getState().environment, 'kashmir')
+assert.equal(store.getState().time, 'night')
+
+store.getState().setSetting('cycle', false)
+assert.equal(store.getState().cycle, false)

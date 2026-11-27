@@ -6,7 +6,7 @@ import { WORLD_PALETTES } from '@/game/world/roadProfile'
 const TIME_PRESETS = {
   day: { sky: '#a0cbe3', fog: '#c1d3ce', sun: '#fff0c9', intensity: 2.1, ambient: 1.1, height: 150 },
   sunset: { sky: '#9e777a', fog: '#d6a38b', sun: '#ffd098', intensity: 1.4, ambient: 0.8, height: 32 },
-  night: { sky: '#101e35', fog: '#1e3045', sun: '#b8d1f1', intensity: 0.55, ambient: 0.7, height: 120 },
+  night: { sky: '#101e35', fog: '#1e3045', sun: '#f2f0dc', intensity: 0.55, ambient: 0.7, height: 120 },
   sunrise: { sky: '#bca0a5', fog: '#e2bfa3', sun: '#ffe2ad', intensity: 1.3, ambient: 0.9, height: 45 },
 }
 
@@ -17,7 +17,7 @@ export function Atmosphere({ settings = {} }) {
   const ambient = useRef()
   const sun = useRef()
   const disc = useRef()
-  const cycle = useRef(0)
+  const cycle = useRef(Math.max(0, ['day', 'sunset', 'night', 'sunrise'].indexOf(settings.time)))
   const colors = useMemo(() => ({ sky: new THREE.Color(), fog: new THREE.Color(), sun: new THREE.Color(), targetSky: new THREE.Color(), targetFog: new THREE.Color(), targetSun: new THREE.Color(), other: new THREE.Color() }), [])
   const fog = useMemo(() => new THREE.Fog(TIME_PRESETS.day.fog, 160, 600), [])
   useEffect(() => {
@@ -71,7 +71,7 @@ function DistantScenery({ environment = 'countryside' }) {
     {Array.from({ length: 18 }, (_, i) => {
       const angle = i / 18 * Math.PI * 2
       if (environment === 'coast' && Math.sin(angle) > 0.15) return null
-      const height = environment === 'forest' ? 90 + (i * 17) % 100 : environment === 'desert' ? 12 + (i * 13) % 22 : environment === 'countryside' ? 24 + (i * 17) % 28 : 40 + (i * 17) % 50
+      const height = environment === 'kashmir' ? 150 + (i * 17) % 100 : environment === 'forest' ? 90 + (i * 17) % 100 : environment === 'desert' ? 12 + (i * 13) % 22 : environment === 'countryside' ? 24 + (i * 17) % 28 : 40 + (i * 17) % 50
       return <mesh key={i} position={[Math.sin(angle) * 470, 14, Math.cos(angle) * 470]} scale={[100, height, 90]}>
         <icosahedronGeometry args={[1, 0]} /><meshStandardMaterial color={palette.hills} roughness={1} />
       </mesh>
