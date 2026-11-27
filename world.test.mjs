@@ -27,3 +27,26 @@ assert.notDeepEqual(sampleRoad(1200, 3), sampleRoad(1200, 4))
 assert(terrainHeight(100, 500, 'coast') < 0)
 assert(Number.isFinite(terrainHeight(-300, 1e8, 'desert')))
 console.log('World profile: deterministic, finite, smooth, relative-origin and recycling contracts passed')
+
+const environments = ['countryside', 'forest', 'desert', 'coast']
+for (const environment of environments) {
+  for (const distance of [0, 48, 431.999, 432, 999999, 1e8]) {
+    const road = sampleRoad(distance, 1, environment)
+    const next = sampleRoad(distance + .001, 1, environment)
+    assert(Math.abs(road.slopeX) < .35, `${environment} road bend remains drivable`)
+    assert(Math.abs(road.slopeY) < .16, `${environment} grade remains bounded`)
+    assert(Math.abs((next.x - road.x) / .001 - road.slopeX) < .001)
+    assert(Math.abs((next.y - road.y) / .001 - road.slopeY) < .001)
+    const origin = roadFrame(0, distance, 1, environment)
+    assert.equal(origin.x, 0); assert.equal(origin.y, 0)
+    const seamFromLeft = roadFrame(48, distance, 1, environment)
+    const seamFromRight = roadFrame(0, distance + 48, 1, environment)
+    const absoluteDelta = sampleRoad(distance + 48, 1, environment).y - road.y
+    assert(Math.abs(seamFromLeft.y - seamFromRight.y - absoluteDelta) < 1e-9)
+    for (const offset of [-320, -100, -10, 10, 100, 320]) assert(Number.isFinite(terrainHeight(offset, distance, environment)))
+  }
+}
+assert.notDeepEqual(sampleRoad(500, 1, 'forest'), sampleRoad(500, 1, 'desert'))
+assert(terrainHeight(180, 500, 'forest') > terrainHeight(180, 500, 'countryside'))
+assert(terrainHeight(200, 500, 'coast') < -3)
+console.log('Indian route profiles: bounded slopes, deterministic regional differences and continuous seams passed')
