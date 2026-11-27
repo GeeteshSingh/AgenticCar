@@ -5,7 +5,14 @@ export function safeRadioUrl(value) {
     const url = new URL(value)
     if (url.protocol !== 'https:' || url.username || url.password) return ''
     if ([...url.searchParams.keys()].some(key => /^(?:token|auth|authorization|password|pass|username|user|api[_-]?key|secret)$/i.test(key))) return ''
-    if (url.hostname === 'localhost' || /^127\.|^10\.|^192\.168\.|^169\.254\.|^172\.(1[6-9]|2\d|3[01])\./.test(url.hostname) || url.hostname.includes(':')) return ''
+    const hostname = url.hostname.replace(/\.$/, '').toLowerCase()
+    if (!hostname.includes('.') || /(?:^|\.)(?:localhost|local|internal|lan|home|invalid|test)$/.test(hostname) || hostname.includes(':')) return ''
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      const [a, b, c] = hostname.split('.').map(Number)
+      if (a === 0 || a === 10 || a === 127 || a >= 224 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) ||
+        (a === 172 && b >= 16 && b <= 31) || (a === 192 && (b === 168 || (b === 0 && (c === 0 || c === 2)))) ||
+        (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) || (a === 203 && b === 0 && c === 113)) return ''
+    }
     return url.href
   } catch { return '' }
 }

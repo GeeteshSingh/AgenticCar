@@ -118,3 +118,14 @@ test('established playback re-arms a bounded watchdog for buffering and clears o
   assert.equal(player.getSnapshot().status, 'error', 'late events must not clear timeout errors')
   player.dispose()
 })
+
+
+test('URL validation rejects local aliases, single-label names and nonpublic address ranges', () => {
+  for (const url of [
+    'https://app.localhost/live', 'https://app.localhost./live', 'https://radio.local/live',
+    'https://intranet/live', 'https://station.lan/live', 'https://radio.internal/live',
+    'https://0.0.0.0/live', 'https://100.64.0.1/live', 'https://198.18.0.1/live',
+    'https://192.0.2.1/live', 'https://203.0.113.1/live', 'https://224.0.0.1/live',
+  ]) assert.equal(safeRadioUrl(url), '', url)
+  assert.equal(safeRadioUrl('https://radio.example.org/live'), 'https://radio.example.org/live')
+})
