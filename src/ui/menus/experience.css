@@ -339,3 +339,23 @@
   .drive-menu-setup fieldset { margin-bottom:9px; }
   .drive-menu-footer { padding-top:10px; }
 }
+
+.drive-hud-actions { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+.drive-hud-mobile-toggle { display:none; }
+@media (max-width:640px) {
+  .drive-hud { padding:12px; }
+  .drive-hud-context { max-width:calc(100vw - 130px); gap:8px; padding:5px 8px; }
+  .drive-hud-mobile-toggle { display:block; pointer-events:auto; min-height:36px; padding:0 8px; color:#edf5ee; text-decoration:underline; }
+  .drive-hud-actions { display:none; position:absolute; top:56px; left:12px; z-index:22; max-width:calc(100vw - 24px); padding:10px; gap:8px 12px; background:#10242e; border:1px solid #607580; border-radius:8px; }
+  .drive-hud-actions.is-open { display:flex; }
+  .drive-hud-objective { top:64px; left:12px; max-width:calc(100vw - 140px); }
+  .drive-hud-dashboard { bottom:max(12px,env(safe-area-inset-bottom)); width:calc(100% - 24px); max-width:420px; justify-content:space-between; gap:8px; padding:10px 12px; }
+  .drive-hud-speed { font-size:30px; }
+  .drive-hud-speed small { font-size:10px; }
+  .drive-hud-stat { font-size:13px; }
+  .drive-hud-stat small { font-size:9px; }
+  .drive-touch { left:12px; right:12px; bottom:86px; }
+  .drive-touch-group { gap:5px; }
+  .drive-touch button { width:clamp(42px,12vw,52px); height:48px; }
+  .vehicle-shortcuts { top:105px; right:12px; }
+}

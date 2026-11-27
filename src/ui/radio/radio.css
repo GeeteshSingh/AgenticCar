@@ -16,3 +16,8 @@
 .radio-panel .radio-volume { flex-wrap:nowrap; }
 .radio-panel .radio-volume small { color:#c5d6c8; white-space:nowrap; font-size:11px; }
 .radio-panel .radio-volume input { accent-color:#b1e8c0; }
+@media (max-width:640px) {
+  .radio-root-driving { top:64px; bottom:auto; right:10px; }
+  .radio-root-driving .radio-toggle { max-width:115px; min-height:40px; padding:8px 10px; }
+  .radio-root-driving .radio-panel { top:48px; bottom:auto; max-height:calc(100dvh - 125px); }
+}
