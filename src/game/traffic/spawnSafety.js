@@ -59,8 +59,8 @@ export function buildLaneOccupancy(vehicles) {
 
 // Choose the safest lane to spawn in, given prospective candidates.
 // Returns a lane index that passes isSpawnSafe, or -1 if none.
-export function pickSafeLane({ candidateZ, length, laneOccupancy, playerZ = 0 }) {
-  const order = shuffleLanes()
+export function pickSafeLane({ candidateZ, length, laneOccupancy, playerZ = 0, random = Math.random }) {
+  const order = shuffleLanes(random)
   for (const lane of order) {
     if (isSpawnSafe({ lane, candidateZ, length, laneOccupancy, playerZ })) {
       return lane
@@ -69,10 +69,10 @@ export function pickSafeLane({ candidateZ, length, laneOccupancy, playerZ = 0 })
   return -1
 }
 
-function shuffleLanes() {
+function shuffleLanes(random) {
   const arr = Array.from({ length: WORLD.laneCount }, (_, i) => i)
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = Math.floor(random() * (i + 1))
     ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   return arr
