@@ -129,3 +129,8 @@ test('URL validation rejects local aliases, single-label names and nonpublic add
   ]) assert.equal(safeRadioUrl(url), '', url)
   assert.equal(safeRadioUrl('https://radio.example.org/live'), 'https://radio.example.org/live')
 })
+
+test('malformed directory entries are ignored safely', async () => {
+  const { normalizeStation } = await import('./src/game/audio/catalog.js')
+  for (const value of [null, undefined, 3, [], 'station']) assert.equal(normalizeStation(value), null)
+})

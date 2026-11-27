@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 48" role="img" aria-labelledby="title">
+  <title id="title">WayFound</title>
+  <path d="M4 40 18 8h9L16 40zm17 0L35 8h9L33 40z" fill="#b1e8c0"/>
+  <text x="54" y="34" fill="#f1f5f9" font-family="system-ui,sans-serif" font-size="30" font-weight="700" letter-spacing="-1">WayFound</text>
+</svg>

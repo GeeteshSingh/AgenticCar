@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { engineMix, trafficMix } from './src/game/audio/drivingMix.js'
+import { engineMix, trafficMix, soundProfile } from './src/game/audio/drivingMix.js'
 const idle = engineMix(0, .12, 'playing', 'suv')
 assert.ok(idle.frequency >= 80, 'idle fundamental is audible on ordinary speakers')
 assert.ok(idle.gain >= .015, 'saved low volume has useful idle output')
@@ -15,3 +15,7 @@ assert.ok(nearby[0].pan < 0 && nearby[1].pan > 0)
 assert.deepEqual(trafficMix(vehicles, 0, 80, .5, 'paused'), [])
 assert.ok(trafficMix(Array(30).fill(vehicles[0]),0,80,1,'playing').length <= 3)
 console.log('Engine audibility, pause/mute, bicycle and bounded spatial traffic tests passed')
+
+const types = ['suv','truck','cycle','hatch','sedan','auto','bike','bus','pickup']
+assert.equal(new Set(types.map(type => soundProfile(type).horn.join(','))).size, 9)
+assert.equal(new Set(types.filter(type => type !== 'cycle').map(type => engineMix(60, 1, 'playing', type).frequency)).size, 8)

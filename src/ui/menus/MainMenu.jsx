@@ -1,3 +1,4 @@
+import { brand } from '@/config/brand'
 import { INDIAN_ROUTES } from '@/game/config/environmentConfig'
 import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
@@ -30,18 +31,18 @@ export function MainMenu() {
     </div>
     <div className="drive-menu-shade" />
     <div className="drive-menu-content">
-      <header className="drive-menu-header"><span>Wayfound</span><button className="drive-text-button" onClick={() => setAbout(!about)} aria-expanded={about}>About</button></header>
+      <header className="drive-menu-header"><img src="/brand/logo.svg" alt={brand.name} width="195" height="36" /><button className="drive-text-button" onClick={() => setAbout(!about)} aria-expanded={about}>About</button></header>
       <section className="drive-menu-intro" aria-labelledby="drive-title">
-        <h1 id="drive-title">A little further.<br />A little slower.</h1>
-        <p>An open road and a moment to yourself. Explore India-inspired routes, tune the radio, and find your own pace.</p>
+        <h1 id="drive-title">{brand.tagline}</h1>
+        <p>{brand.subtagline} An open road and a moment to yourself. Explore India-inspired routes, tune the radio, and find your own pace.</p>
       </section>
       <section className="drive-menu-setup" aria-label="Set up your drive">
         <fieldset><legend>Your Indian route</legend><div className="drive-environments">{environments.map(([id, label]) => <button key={id} aria-pressed={environment === id} onClick={() => setSetting('environment', id)}>{label}</button>)}</div><p className="drive-route-description">{INDIAN_ROUTES[environment]?.region} — {INDIAN_ROUTES[environment]?.description}</p></fieldset>
-        <fieldset><legend>Your drive</legend><div className="drive-modes">{modes.map(({id, title, icon: Icon, description}) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}><Icon size={18} aria-hidden="true" /><span><strong>{title}</strong><small>{description}</small></span></button>)}</div></fieldset>
+        <fieldset><legend>Your drive</legend><div className="drive-modes">{modes.map(({id, title, icon: Icon, description}) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}><Icon size={18} aria-hidden="true" /><span><strong>{title}</strong></span></button>)}</div><p className="drive-mode-description">{modes.find(item => item.id === mode)?.description}</p></fieldset>
         <Button className="drive-start" onClick={() => startRun(mode)}>Start {modes.find(m => m.id === mode).title.toLowerCase()}<ArrowRight aria-hidden="true" /></Button>
         <p className="drive-menu-hint">WASD or arrows to drive · C camera · Esc pause</p>
       </section>
-      {about && <section className="drive-about" aria-label="About Wayfound"><h2>Made for the road</h2><p>Wayfound is an endless driving game built with React and Three.js. Routes are original procedural interpretations of Indian regions, not geographic replicas. Landscapes are generated in the browser; live radio comes from Radio Browser. Open Settings to adjust your drive, graphics, and sound.</p></section>}
+      {about && <section className="drive-about" aria-label={`About ${brand.name}`}><h2>Made for the road</h2><p>{brand.name} is an endless driving game built with React and Three.js. Routes are original procedural interpretations of Indian regions, not geographic replicas. Landscapes are generated in the browser; live radio comes from Radio Browser. Open Settings to adjust your drive, graphics, and sound.</p></section>}
       <footer className="drive-menu-footer"><span>Highway Objective</span><span>Choose a view. Enjoy the journey.</span></footer>
     </div>
   </main>

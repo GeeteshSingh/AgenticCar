@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Heart, SkipBack, SkipForward, Play, Pause, Square, Volume2, VolumeX } from 'lucide-react'
 import { useRadioStore } from '../../stores/useRadioStore'
 import { useGameStore } from '../../stores/useGameStore'
 import { getCountries, recordStationClick, searchStations } from '../../game/audio/catalog'
@@ -25,6 +26,29 @@ export function RadioPanel() {
     // These refs hold service handles, not DOM nodes; cancel the latest request on teardown.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
     return () => { serialRef.current++; searchRef.current?.abort(); unsubscribe(); player.dispose(); playerRef.current = null }
+  }, [])
+  useEffect(() => {
+    const onKeyDown = event => {
+      if (event.code !== 'KeyP' || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return
+      if (event.target instanceof HTMLElement && event.target.closest('input, select, textarea, [contenteditable]:not([contenteditable="false"])')) return
+      const { selected, status, remember } = useRadioStore.getState()
+      if (!selected || !playerRef.current) return
+      event.preventDefault()
+      if (status === 'playing' || status === 'loading') {
+        serialRef.current++
+        playerRef.current.pause()
+      } else {
+        const serial = ++serialRef.current
+        playerRef.current.play(selected).then(played => {
+          if (played && serial === serialRef.current) {
+            remember(selected)
+            recordStationClick(selected).catch(() => setNotice('Audio is playing. The directory could not record this station selection.'))
+          }
+        })
+      }
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [])
   useEffect(() => { playerRef.current?.setVolume(radio.volume) }, [radio.volume])
   useEffect(() => { playerRef.current?.setMuted(radio.muted) }, [radio.muted])
@@ -96,9 +120,17 @@ export function RadioPanel() {
       event.stopPropagation()
     }} onKeyUp={event => event.stopPropagation()}>
       <header><div><small>ON THE ROAD</small><h2>Radio</h2></div><button onClick={close} aria-label="Close radio">×</button></header>
-      <div className="radio-now"><small>NOW TUNED</small><strong>{radio.selected?.name || 'Find your soundtrack'}</strong>{radio.selected && <small>{[radio.selected.country, radio.selected.codec, radio.selected.bitrate ? `${radio.selected.bitrate} kbps` : ''].filter(Boolean).join(' · ')}</small>}<span aria-live="polite">{radio.status === 'idle' ? 'Press a station to listen' : radio.status}</span>
-        {radio.selected && <div className="radio-player-controls"><button onClick={() => changeStation(-1)} disabled={!stations.length} aria-label="Previous station">‹</button><button onClick={() => radio.status === 'playing' || radio.status === 'loading' ? playerRef.current?.pause() : play(radio.selected)}>{radio.status === 'playing' || radio.status === 'loading' ? 'Pause' : 'Play'}</button><button onClick={() => playerRef.current?.stop()}>Stop</button><button onClick={() => changeStation(1)} disabled={!stations.length} aria-label="Next station">›</button></div>}
-        <div className="radio-volume"><button onClick={() => radio.setMuted(!radio.muted)} aria-label={radio.muted ? 'Unmute radio' : 'Mute radio'}>{radio.muted ? 'Unmute' : 'Mute'}</button><label>Volume<input type="range" min="0" max="1" step=".01" value={radio.volume} onChange={event => radio.setVolume(Number(event.target.value))} /></label></div>
+      <div className="radio-now">
+        <div className="radio-now-title"><div><strong>{radio.selected?.name || 'Find your soundtrack'}</strong><small>{radio.selected ? [radio.selected.country, radio.selected.codec, radio.selected.bitrate ? `${radio.selected.bitrate} kbps` : ''].filter(Boolean).join(' · ') || 'Internet radio' : 'Choose a station below'}</small></div><span className="radio-live" aria-live="polite">{radio.status === 'playing' ? 'LIVE' : radio.status === 'loading' ? 'CONNECTING' : radio.status.toUpperCase()}</span></div>
+        <div className="radio-live-rule" aria-hidden="true"><span /></div>
+        <div className="radio-player-controls">
+          <button disabled={!radio.selected} onClick={() => radio.toggleFavorite(radio.selected)} aria-label={radio.favorites.some(s => s.id === radio.selected?.id) ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={radio.favorites.some(s => s.id === radio.selected?.id)}><Heart size={19} fill={radio.favorites.some(s => s.id === radio.selected?.id) ? 'currentColor' : 'none'}/></button>
+          <button onClick={() => changeStation(-1)} disabled={!stations.length} aria-label="Previous station"><SkipBack size={20}/></button>
+          <button className="radio-main-play" disabled={!radio.selected} onClick={() => radio.status === 'playing' || radio.status === 'loading' ? playerRef.current?.pause() : play(radio.selected)} aria-label={radio.status === 'playing' || radio.status === 'loading' ? 'Pause radio' : 'Play radio'}>{radio.status === 'playing' || radio.status === 'loading' ? <Pause size={25} fill="currentColor"/> : <Play size={25} fill="currentColor"/>}</button>
+          <button onClick={() => changeStation(1)} disabled={!stations.length} aria-label="Next station"><SkipForward size={20}/></button>
+          <button disabled={!radio.selected} onClick={() => playerRef.current?.stop()} aria-label="Stop radio"><Square size={18}/></button>
+        </div>
+        <div className="radio-volume"><button onClick={() => radio.setMuted(!radio.muted)} aria-label={radio.muted ? 'Unmute radio' : 'Mute radio'}>{radio.muted ? <VolumeX size={18}/> : <Volume2 size={18}/>}</button><label><span className="sr-only">Radio volume</span><input aria-label="Radio volume" type="range" min="0" max="1" step=".01" value={radio.volume} onChange={event => radio.setVolume(Number(event.target.value))} /></label><small>P play / pause</small></div>
       </div>
       {radio.playbackError && <p className="radio-error" role="alert">{radio.playbackError} {radio.selected && <button onClick={() => play(radio.selected)}>Retry</button>}</p>}
       <nav aria-label="Radio views">{[['discover', 'Discover'], ['favorites', 'Favorites'], ['recent', 'Recent'], ['playlist', 'Playlist']].map(([id, name]) => <button key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{name}</button>)}</nav>
@@ -117,7 +149,7 @@ export function RadioPanel() {
         <button className="radio-station" onClick={() => play(station)}><strong>{station.name}</strong><small>{[station.country, station.state, station.codec, station.bitrate ? `${station.bitrate} kbps` : '', station.online === true ? 'Directory: online' : ''].filter(Boolean).join(' · ')}</small></button>
         <button onClick={() => radio.toggleFavorite(station)} aria-label={`${radio.favorites.some(s => s.id === station.id) ? 'Remove' : 'Add'} ${station.name} ${radio.favorites.some(s => s.id === station.id) ? 'from' : 'to'} favorites`}>{radio.favorites.some(s => s.id === station.id) ? '★' : '☆'}</button>
       </article>)}{!stations.length && !loading && <p className="radio-hint">{tab === 'discover' ? 'Search to discover stations. Try fewer filters if no stations match.' : 'Nothing here yet.'}</p>}</div>
-      <footer><a href="https://www.radio-browser.info/" target="_blank" rel="noreferrer">Directory: Radio Browser</a><span>Radio keeps playing through pause and restart.</span></footer>
+      <footer><a href="https://www.radio-browser.info/" target="_blank" rel="noreferrer">Directory: Radio Browser</a><span>Radio keeps playing through pause and restart. Press P to play or pause.</span></footer>
     </section>}
   </div>
 }

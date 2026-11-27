@@ -1,7 +1,19 @@
+export const SOUND_PROFILES = {
+  suv: {idle: 88, rev: 1.05, exhaust: .75, horn: [392, 494]},
+  truck: {idle: 82, rev: .7, exhaust: 1, horn: [175, 220]},
+  cycle: {idle: 0, rev: 0, exhaust: 0, horn: [1175, 1568]},
+  hatch: {idle: 105, rev: 1.35, exhaust: .55, horn: [440, 554]},
+  sedan: {idle: 96, rev: 1.2, exhaust: .6, horn: [370, 466]},
+  auto: {idle: 115, rev: 1.7, exhaust: .9, horn: [510, 640]},
+  bike: {idle: 135, rev: 1.6, exhaust: 1, horn: [480, 600]},
+  bus: {idle: 85, rev: .8, exhaust: .9, horn: [196, 247]},
+  pickup: {idle: 91, rev: .95, exhaust: .85, horn: [330, 415]},
+}
+export function soundProfile(type) { return SOUND_PROFILES[type] || SOUND_PROFILES.suv }
 export function engineMix(speed, volume, phase, type) {
   const running = phase === 'playing' && type !== 'cycle'
-  const base = ['truck', 'bus'].includes(type) ? 85 : type === 'bike' ? 130 : 95
-  return { frequency: base + Math.min(220, Math.abs(speed)) * 1.3,
+  const profile = soundProfile(type)
+  return { frequency: profile.idle + Math.min(220, Math.abs(speed)) * profile.rev,
     gain: running ? volume * (.16 + Math.min(220, Math.abs(speed)) / 900) : 0 }
 }
 export function trafficMix(vehicles, playerX, playerSpeed, volume, phase) {

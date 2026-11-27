@@ -28,7 +28,7 @@ assert(terrainHeight(100, 500, 'coast') < 0)
 assert(Number.isFinite(terrainHeight(-300, 1e8, 'desert')))
 console.log('World profile: deterministic, finite, smooth, relative-origin and recycling contracts passed')
 
-const environments = ['countryside', 'forest', 'desert', 'coast']
+const environments = ['countryside', 'forest', 'desert', 'coast', 'kashmir']
 for (const environment of environments) {
   for (const distance of [0, 48, 431.999, 432, 999999, 1e8]) {
     const road = sampleRoad(distance, 1, environment)

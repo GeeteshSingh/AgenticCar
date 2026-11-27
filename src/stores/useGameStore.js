@@ -37,8 +37,11 @@ export const useGameStore = create((set, get) => ({
   objectiveCompleted: 0,
   objectiveTotal: 0,
   resultReason: '',
+  roadFinds: [],
   missionComplete: false,
   cameraMode: useSettingsStore.getState().camera, // 'chase' | 'hood'
+
+  recordRoadFind: (find) => set((s) => s.roadFinds.some(item => item.id === find.id) ? s : { roadFinds: [...s.roadFinds, find] }),
 
   // ---- Actions ----
   setPhase: (phase) => set({ phase }),
@@ -64,6 +67,7 @@ export const useGameStore = create((set, get) => ({
       objectiveCompleted: 0,
       objectiveTotal: 0,
       resultReason: '',
+      roadFinds: [],
   missionComplete: false,
       cameraMode: useSettingsStore.getState().camera,
     }),
@@ -113,6 +117,7 @@ export const useGameStore = create((set, get) => ({
       objectiveCompleted: 0,
       objectiveTotal: 0,
       resultReason: '',
+      roadFinds: [],
   missionComplete: false,
       cameraMode: useSettingsStore.getState().camera,
     }),

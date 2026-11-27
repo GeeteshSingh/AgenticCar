@@ -1,10 +1,19 @@
 import { create } from 'zustand'
 import { INDIAN_ROUTES } from '../game/config/environmentConfig.js'
-const defaults = { vehicle: 0, environment: 'forest', time: 'day', weather: 'fog', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.45, camera: 'chase', cycle: false }
+const defaults = { vehicle: 0, environment: 'forest', time: 'day', weather: 'fog', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.45, camera: 'chase', cycle: true }
 function restore() {
-  try { return JSON.parse(localStorage.getItem('agenticcar-settings') || '{}') } catch { return {} }
+  try {
+    const saved = JSON.parse(localStorage.getItem('agenticcar-settings') || '{}')
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return {}
+    if (saved.cycleDefaultVersion !== 1) {
+      saved.cycle = true
+      saved.cycleDefaultVersion = 1
+      try { localStorage.setItem('agenticcar-settings', JSON.stringify(saved)) } catch { /* Preferences still apply this session. */ }
+    }
+    return saved
+  } catch { return {} }
 }
-const choices = {environment: ['countryside','forest','desert','coast'], time: ['day','sunset','night','sunrise'], weather: ['clear','fog','rain'], quality: ['low','medium','high'], camera: ['chase','hood','interior']}
+const choices = {environment: ['countryside','forest','desert','coast','kashmir'], time: ['day','sunset','night','sunrise'], weather: ['clear','fog','rain'], quality: ['low','medium','high'], camera: ['chase','hood','interior']}
 function sanitize(values) {
   if (!values || typeof values !== 'object' || Array.isArray(values)) values = {}
   const out = { ...defaults }
@@ -23,6 +32,6 @@ export const useSettingsStore = create((set, get) => ({
     const preset = key === 'environment' ? INDIAN_ROUTES[value] : null
     const next = sanitize({ ...get(), ...(preset ? {weather: preset.weather, time: preset.time} : {}), [key]: value })
     set(next)
-    try { localStorage.setItem('agenticcar-settings', JSON.stringify(next)); set({persistenceError: ''}) } catch { set({persistenceError: 'Settings could not be saved. Your changes work for this session only.'}) }
+    try { localStorage.setItem('agenticcar-settings', JSON.stringify({ ...next, cycleDefaultVersion: 1 })); set({persistenceError: ''}) } catch { set({persistenceError: 'Settings could not be saved. Your changes work for this session only.'}) }
   },
 }))

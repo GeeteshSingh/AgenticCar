@@ -1,4 +1,4 @@
-# Wayfound — Highway Objective
+# WayFound — Highway Objective
 
 A desktop browser driving game with curved endless roads, generated landscapes and internet radio. Choose a relaxed Free Drive, score-based Endless run, or a five-stage Mission.
 

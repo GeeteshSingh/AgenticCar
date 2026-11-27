@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { WORLD } from '@/game/config/gameConfig'
+import { Billboards } from './Billboards'
+import { NightLamps } from './NightLamps'
 import { RouteLandmarks } from './RouteLandmarks'
 import { roadFrame, terrainHeight, WORLD_PALETTES } from './roadProfile'
 
@@ -120,7 +122,7 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
       const scale = 0.8 + hash(cell * 13, 10) / 10
       const visible = (!low || hash(cell, 3) === 0) && !(environment === 'coast' && side > 0) && !(environment === 'desert' && hash(cell, 5) !== 0)
       const y = frame.y + terrainHeight(offset, globalZ, environment)
-      const treeHeight = environment === 'coast' ? 7 : environment === 'desert' ? 1.8 : environment === 'forest' ? 5 : 3.5
+      const treeHeight = environment === 'coast' ? 7 : environment === 'desert' ? 1.8 : environment === 'forest' ? 5 : environment === 'kashmir' ? 5.5 : 3.5
       TEMP.position.set(frame.x + offset, y + scale * treeHeight, z)
       TEMP.rotation.set(0, cell, 0)
       const crownWidth = environment === 'desert' ? 1.25 : environment === 'coast' ? 1.5 : environment === 'forest' ? 1.8 : 1.4
@@ -143,6 +145,8 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
   return (
     <group>
       <RouteLandmarks distanceRef={distanceRef || travelled} environment={environment} />
+      <NightLamps distanceRef={distanceRef || travelled} environment={environment} time={settings.time} cycle={settings.cycle} />
+      <Billboards distanceRef={distanceRef || travelled} environment={environment} />
       {strips.map((strip, i) => <group key={i}>
         {environment === 'coast' && <mesh geometry={strip.water} material={materials.water} />}
         <mesh geometry={strip.ground} material={materials.ground} receiveShadow />
@@ -151,7 +155,7 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
         {strip.lines.map((line) => <mesh key={line.x} geometry={line.geometry} material={line.x === 0 ? materials.yellow : materials.white} />)}
       </group>)}
       <instancedMesh ref={trees} args={[null, null, 240]} frustumCulled={false}>
-        {environment === 'coast' ? <PalmCrownGeometry /> : <icosahedronGeometry args={[2.2, 1]} />}<meshStandardMaterial color={palette.foliage} roughness={1} side={THREE.DoubleSide} />
+        {environment === 'coast' ? <PalmCrownGeometry /> : environment === 'kashmir' ? <coneGeometry args={[2.2, 6, 7]} /> : <icosahedronGeometry args={[2.2, 1]} />}<meshStandardMaterial color={palette.foliage} roughness={1} side={THREE.DoubleSide} />
       </instancedMesh>
       <instancedMesh ref={trunks} args={[null, null, 240]} frustumCulled={false}>
         <cylinderGeometry args={[1, 1.4, 2, 5]} /><meshStandardMaterial color="#635244" roughness={1} />

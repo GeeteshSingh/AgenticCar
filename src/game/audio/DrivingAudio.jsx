@@ -1,5 +1,5 @@
 import { playImpact, subscribeImpact } from '@/game/audio/impact'
-import { engineMix, trafficMix, currentTrafficAudio, subscribeHorn, subscribeAudioStart } from '@/game/audio/drivingMix'
+import { engineMix, soundProfile, trafficMix, currentTrafficAudio, subscribeHorn, subscribeAudioStart } from '@/game/audio/drivingMix'
 import { playerVehicle } from '@/game/config/playerVehicles'
 import { useEffect } from 'react'
 import { useGameStore } from '@/stores/useGameStore'
@@ -9,7 +9,7 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 // The context is created only after a user gesture, with one bounded noise buffer.
 export function DrivingAudio() {
   useEffect(() => {
-    let context, engine, wind, engineGain, windGain, timer, noiseBuffer, hornGain
+    let context, engine, wind, engineGain, windGain, timer, noiseBuffer, hornGain, exhaust, exhaustGain, engineFilter
     let lastHorn = -Infinity
     const voices = [], horns = []
     const audioFailure = () => useSettingsStore.setState({audioError: 'Engine audio is unavailable. Radio and driving still work; try another browser or mute engine sound.'})
@@ -18,9 +18,14 @@ export function DrivingAudio() {
       const AudioContext = window.AudioContext || window.webkitAudioContext
       if (!AudioContext) { audioFailure(); return }
       context = new AudioContext()
-      engine = context.createOscillator(); engine.type = 'sawtooth'
+      engine = context.createOscillator(); engine.type = 'triangle'
+      engineFilter = context.createBiquadFilter(); engineFilter.type = 'lowpass'; engineFilter.frequency.value = 650
       engineGain = context.createGain(); engineGain.gain.value = 0
-      engine.connect(engineGain).connect(context.destination); engine.start()
+      engine.connect(engineFilter).connect(engineGain).connect(context.destination); engine.start()
+      exhaust = context.createOscillator(); exhaust.type = 'sawtooth'
+      const exhaustFilter = context.createBiquadFilter(); exhaustFilter.type = 'lowpass'; exhaustFilter.frequency.value = 340
+      exhaustGain = context.createGain(); exhaustGain.gain.value = 0
+      exhaust.connect(exhaustFilter).connect(exhaustGain).connect(context.destination); exhaust.start()
       const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate)
       noiseBuffer = buffer
       const samples = buffer.getChannelData(0)
@@ -46,7 +51,10 @@ export function DrivingAudio() {
         const volume = phase === 'playing' ? useSettingsStore.getState().engineVolume : 0
         const speed = Math.abs(speedKmh)
         const mix = engineMix(speed, settings.engineVolume, phase, playerVehicle(settings.vehicle).type)
-        engine.frequency.setTargetAtTime(mix.frequency, context.currentTime, .12)
+        const profile = soundProfile(playerVehicle(settings.vehicle).type)
+        engine.frequency.setTargetAtTime(mix.frequency || 80, context.currentTime, .12)
+        exhaust.frequency.setTargetAtTime((mix.frequency || 80) / 2, context.currentTime, .12)
+        exhaustGain.gain.setTargetAtTime(mix.gain * profile.exhaust * .65, context.currentTime, .08)
         engineGain.gain.setTargetAtTime(mix.gain, context.currentTime, .08)
         const traffic = currentTrafficAudio()
         const nearby = trafficMix(traffic.vehicles, traffic.playerX, speed, volume, phase)
@@ -67,10 +75,12 @@ export function DrivingAudio() {
       const sound = () => {
         if (useGameStore.getState().phase !== 'playing' || context.currentTime - lastHorn < .5) return
         lastHorn = context.currentTime
-        const now = context.currentTime, volume = useSettingsStore.getState().engineVolume
+        const now = context.currentTime, settings = useSettingsStore.getState(), volume = settings.engineVolume
+        const profile = soundProfile(playerVehicle(settings.vehicle).type)
+        horns.forEach((horn, i) => horn.frequency.setValueAtTime(profile.horn[i], now))
         hornGain.gain.cancelScheduledValues(now); hornGain.gain.setValueAtTime(0, now)
-        hornGain.gain.linearRampToValueAtTime(volume * .16, now + .025)
-        hornGain.gain.setValueAtTime(volume * .16, now + .3)
+        hornGain.gain.linearRampToValueAtTime(volume * .35, now + .025)
+        hornGain.gain.setValueAtTime(volume * .35, now + .3)
         hornGain.gain.linearRampToValueAtTime(0, now + .4)
       }
       if (context.state === 'running') sound()
@@ -79,7 +89,7 @@ export function DrivingAudio() {
     const unsubscribe = subscribeImpact(severity => playImpact(context, noiseBuffer, severity, useSettingsStore.getState().engineVolume))
     window.addEventListener('pointerdown', start)
     window.addEventListener('keydown', start)
-    return () => { unsubscribe(); unsubscribeHorn(); unsubscribeStart(); for (const voice of voices) voice.oscillator.stop(); for (const horn of horns) horn.stop(); window.removeEventListener('pointerdown', start); window.removeEventListener('keydown', start); clearInterval(timer); engine?.stop(); wind?.stop(); context?.close() }
+    return () => { unsubscribe(); unsubscribeHorn(); unsubscribeStart(); for (const voice of voices) voice.oscillator.stop(); for (const horn of horns) horn.stop(); window.removeEventListener('pointerdown', start); window.removeEventListener('keydown', start); clearInterval(timer); engine?.stop(); exhaust?.stop(); wind?.stop(); context?.close() }
   }, [])
   return null
 }
