@@ -3,9 +3,10 @@ import { useFrame } from '@react-three/fiber'
 import { TrafficVehicle } from '@/game/traffic/TrafficVehicle'
 import { trySpawnVehicle, spawnInterval, maxActiveVehicles, resetSpawnCounter } from '@/game/traffic/trafficSpawner'
 import { TRAFFIC, laneCenterX } from '@/game/config/trafficConfig'
-import { KMH_TO_MS, VEHICLE } from '@/game/config/vehicleConfig'
+import { VEHICLE } from '@/game/config/vehicleConfig'
 import { difficultyFromProgress } from '@/game/config/difficultyConfig'
 import { assessCollision } from '@/game/collision/collisionSeverity'
+import { readPlayerSpeed, trafficDeltaZ, trafficStep } from '@/game/traffic/trafficSimulation'
 
 // Manages a fixed pool of traffic vehicles. No create/destroy churn: a pool of
 // N ref-states is recycled. Each pooled vehicle carries an `active` flag and a
@@ -21,7 +22,7 @@ import { assessCollision } from '@/game/collision/collisionSeverity'
 // vehicle (guarded by the vehicle's `hit` flag) so the host can apply damage,
 // shake, and effects. The hit vehicle is recycled immediately to avoid
 // re-triggering.
-export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, survivalRef, active, runToken, onCollision, cooldownRef, vehiclesRef }) {
+export function TrafficManager({ playerStateRef, distanceRef, survivalRef, active, runToken, onCollision, cooldownRef, vehiclesRef }) {
   const poolRef = useRef(
     Array.from({ length: TRAFFIC.poolSize }, () => ({
       id: null,
@@ -48,6 +49,7 @@ export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, su
   if (active && lastToken.current !== runToken) {
     lastToken.current = runToken
     resetSpawnCounter()
+    spawnTimerRef.current = 0
     for (const v of poolRef.current) {
       v.active = false
       v.id = null
@@ -62,18 +64,16 @@ export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, su
 
   useFrame((_, dt) => {
     if (!active) return
-    const playerSpeed = playerSpeedRef?.current ?? 0
-    const playerMs = Math.max(0, playerSpeed) * KMH_TO_MS
+    dt = trafficStep(dt)
+    const playerSpeed = readPlayerSpeed(playerStateRef?.current)
     const t = difficultyFromProgress(distanceRef?.current ?? 0, survivalRef?.current ?? 0)
     const playerX = playerStateRef?.current?.lateralX ?? 0
-    const inCooldown = (cooldownRef?.current ?? 0) > 0
+    let inCooldown = (cooldownRef?.current ?? 0) > 0
 
     let changed = false
     for (const v of poolRef.current) {
       if (!v.active) continue
-      const trafficMs = v.speed * KMH_TO_MS * v.direction
-      const dz = -(playerMs - trafficMs) * dt
-      v.z += dz
+      v.z += trafficDeltaZ(playerSpeed, v, dt)
       if (v.flash > 0) v.flash = Math.max(0, v.flash - dt)
 
       if (v.z < TRAFFIC.despawnDistance) {
@@ -102,6 +102,8 @@ export function TrafficManager({ playerStateRef, playerSpeedRef, distanceRef, su
         })
         assessment.vehicleId = v.id
         if (onCollision) onCollision(assessment)
+        // The callback can start cooldown immediately: avoid two hits in one frame.
+        inCooldown = true
         v.active = false
         v.id = null
         changed = true
