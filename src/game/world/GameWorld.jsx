@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { EndlessHighway } from '@/game/world/EndlessHighway'
 import { PlayerCar } from '@/game/player/PlayerCar'
@@ -6,9 +6,8 @@ import { CameraManager } from '@/game/camera/CameraManager'
 import { TrafficManager } from '@/game/traffic/TrafficManager'
 import { useArcadeVehicleController } from '@/game/player/useArcadeVehicleController'
 import { useKeyboardInput } from '@/game/input/useKeyboardInput'
-import { useGameStore, GAME_STATES } from '@/stores/useGameStore'
-import { ENVIRONMENT } from '@/game/config/gameConfig'
-import { KMH_TO_MS, VEHICLE } from '@/game/config/vehicleConfig'
+import { useGameStore } from '@/stores/useGameStore'
+import { KMH_TO_MS } from '@/game/config/vehicleConfig'
 import { createCollisionEffects } from '@/game/effects/useCollisionEffects'
 import { setCollisionFlash } from '@/game/effects/collisionSignal'
 import { createScoringManager } from '@/game/scoring/ScoringManager'
@@ -16,7 +15,9 @@ import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
 import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
 import { createEventBus, GAME_EVENTS } from '@/game/events/gameEvents'
 import { createObjectiveManager } from '@/game/objectives/ObjectiveManager'
-import { Environment } from '@/game/environment/Environment'
+import { useSettingsStore } from '@/stores/useSettingsStore'
+import { Atmosphere } from '@/game/environment/Environment'
+import { sampleRoad, roadFrame } from '@/game/world/roadProfile'
 
 // Live 3D scene for Phase 2. The player car stays near z=0; the highway
 // scrolls toward it. All high-frequency simulation runs here via refs in the
@@ -63,8 +64,7 @@ export function GameWorld() {
   const topSpeedRef = useRef(0)
   // Bumped on each fresh run so TrafficManager resets its pool deterministically
   const runTokenRef = useRef(0)
-  const prevPhaseRef = useRef(phase)
-  if (prevPhaseRef.current !== 'playing' && phase === 'playing') {
+  if (runTokenRef.current === 0) {
     runTokenRef.current += 1
     distanceRef.current = 0
     survivalRef.current = 0
@@ -77,22 +77,20 @@ export function GameWorld() {
     nearMissDetRef.current = createNearMissDetector()
     goalModeRef.current = useGameStore.getState().mode || 'endless'
     objectiveRef.current = createObjectiveManager({ mode: goalModeRef.current })
-    // Seed the objective HUD immediately so the panel is populated on frame 1
-    // (avoids a null/empty flicker before the first throttled update).
-    const objSnap = objectiveRef.current.snapshot()
-    updateStats({
-      activeObjective: objSnap.active,
-      objectiveCompleted: objSnap.completedCount,
-      objectiveTotal: objSnap.totalCount,
-    })
-  }
-  prevPhaseRef.current = phase
 
-  const day = ENVIRONMENT.day
+  }
+
+  useEffect(() => {
+    const snapshot = objectiveRef.current?.snapshot()
+    updateStats({activeObjective: snapshot?.active ?? null, objectiveCompleted: 0, objectiveTotal: snapshot?.totalCount ?? 0})
+  }, [updateStats])
+
+  const settings = useSettingsStore()
 
   // Applies a collision assessment: reduces integrity, slows the car, shakes
   // the camera, and triggers the finish sequence at zero integrity.
   const handleCollision = (assessment) => {
+    if (useGameStore.getState().mode === 'relaxed') return
     integrityRef.current = Math.max(0, integrityRef.current - assessment.damage)
     effectsRef.current.triggerSeverity(assessment.severity)
     cooldownRef.current = 0.6 // brief invulnerability so we don't multi-hit
@@ -117,7 +115,7 @@ export function GameWorld() {
         score: snap.score,
         distanceMeters: snap.distanceMeters,
         survivalTime: survivalRef.current,
-        speedKmh: snap.topSpeed,
+        speedKmh: stateRef.current.speed,
       })
     }
   }
@@ -127,20 +125,36 @@ export function GameWorld() {
   finishRunRef.current = useGameStore.getState().finishRun
 
   const finishRun = (results) => {
-    finishRunRef.current?.(results)
+    const scoring = scoringRef.current.snapshot()
+    const objective = objectiveRef.current?.snapshot()
+    finishRunRef.current?.({
+      ...scoring,
+      speedKmh: stateRef.current.speed,
+      survivalTime: survivalRef.current,
+      integrity: integrityRef.current,
+      objectiveCompleted: objective?.completedCount ?? 0,
+      objectiveTotal: objective?.totalCount ?? 0,
+      ...results,
+      topSpeed: scoring.topSpeed,
+    })
   }
 
   useFrame((_, dt) => {
+    if (destroyRef.current) return
     // Edge actions (camera / pause toggles)
     const edges = consumeEdgeActions()
     for (const e of edges) {
-      if (e === 'toggleCamera') toggleCameraMode()
+      if (e === 'toggleCamera') {
+        toggleCameraMode()
+        useSettingsStore.getState().setSetting('camera', useGameStore.getState().cameraMode)
+      }
       else if (e === 'togglePause') togglePause()
     }
 
-    if (cooldownRef.current > 0) cooldownRef.current = Math.max(0, cooldownRef.current - dt)
+    dt = Math.min(dt, 1 / 30)
+    if (running && cooldownRef.current > 0) cooldownRef.current = Math.max(0, cooldownRef.current - dt)
 
-    if (running) {
+    if (running && useGameStore.getState().phase === 'playing') {
       const s = update(dt, actionsRef.current)
 
       // Advance virtual distance (meters) from speed
@@ -148,6 +162,12 @@ export function GameWorld() {
       distanceRef.current += dMeters
       survivalRef.current += dt
       topSpeedRef.current = Math.max(topSpeedRef.current, s.speed)
+      const road = sampleRoad(distanceRef.current)
+      const ahead = roadFrame(15, distanceRef.current)
+      s.roadHeading = road.heading
+      s.roadPitch = road.pitch
+      s.lookX = ahead.x
+      s.lookY = ahead.y
 
       // --- Scoring: distance, overtakes, near misses (events + detectors) ---
       scoringRef.current.addDistance(dMeters, s.speed)
@@ -182,6 +202,12 @@ export function GameWorld() {
           collisions: scoringRef.current.state.collisions,
           topSpeed: topSpeedRef.current,
         }
+        const activeGoal = goal.snapshot().active
+        if (goalModeRef.current === 'mission' && activeGoal?.type === 'MINIMUM_INTEGRITY' && integrityRef.current < activeGoal.target) {
+          destroyRef.current = true
+          finishRun({resultReason: 'Mission ended: final integrity is below 50%.'})
+          return
+        }
         const { completed, missionComplete } = goal.update(goalStats, dt)
         for (const obj of completed) {
           scoringRef.current.addObjectiveReward(obj.reward)
@@ -199,7 +225,7 @@ export function GameWorld() {
             score: snap.score,
             distanceMeters: snap.distanceMeters,
             survivalTime: survivalRef.current,
-            speedKmh: snap.topSpeed,
+            speedKmh: stateRef.current.speed,
             missionComplete: true,
           })
         }
@@ -251,34 +277,12 @@ export function GameWorld() {
 
   return (
     <group>
-      <ambientLight intensity={day.ambientIntensity} />
-      <directionalLight
-        position={day.sunPosition}
-        intensity={day.sunIntensity}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-60}
-        shadow-camera-right={60}
-        shadow-camera-top={60}
-        shadow-camera-bottom={-60}
-        shadow-camera-far={200}
-      />
-
-      {/* Distant ground for context */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
-        <planeGeometry args={[400, 1200]} />
-        <meshStandardMaterial color="#070b12" />
-      </mesh>
-
-      {/* Sky, sun/moon disc, distant mountains */}
-      <Environment env={day} />
-
-      <EndlessHighway scrollRef={scrollRef} />
+      <Atmosphere settings={settings} />
+      <EndlessHighway scrollRef={scrollRef} distanceRef={distanceRef} settings={settings} />
 
       {/* Traffic: pooled, recycled, lane-bound, safe-spawned */}
       <TrafficManager
         playerStateRef={stateRef}
-        playerSpeedRef={stateRef}
         distanceRef={distanceRef}
         survivalRef={survivalRef}
         active={running}

@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { VEHICLE } from '@/game/config/vehicleConfig'
 
 // Visual primitive for one traffic vehicle. Transform (z, x, facing) is driven
 // each frame by TrafficManager's pooled state; this component only reads the
@@ -23,7 +22,6 @@ export function TrafficVehicle({ vehicleRef }) {
   const h = vehicleRef?.height ?? 1.4
   const color = vehicleRef?.color ?? '#ef4444'
   const flashed = (vehicleRef?.flash ?? 0) > 0
-  const oncoming = (vehicleRef?.direction ?? 1) < 0
 
   return (
     <group ref={groupRef}>

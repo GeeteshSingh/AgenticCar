@@ -20,7 +20,7 @@ export const VEHICLE = {
   reversePower: 30, // reverse accel
 
   // Passive deceleration
-  dragCoef: 0.6, // air drag factor (per second, scaled by speed)
+  dragCoef: 0.12, // air drag factor (per second, scaled by speed)
   rollingResistance: 6, // constant slow-down (km/h per second)
 
   // Steering

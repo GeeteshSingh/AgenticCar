@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import { useGameStore, GAME_STATES } from '@/stores/useGameStore'
 import { GameCanvas } from '@/game/GameCanvas'
 import { MainMenu } from '@/ui/menus/MainMenu'
 import { GameHUD } from '@/ui/hud/GameHUD'
 import { PauseMenu } from '@/ui/pause/PauseMenu'
 import { ResultsScreen } from '@/ui/results/ResultsScreen'
+import { TouchControls } from '@/ui/controls/TouchControls'
 import { CollisionFlash } from '@/ui/effects/CollisionFlash'
 
 // Drives the transition from loading -> countdown -> playing once inside a
@@ -46,10 +46,17 @@ function LoadingGate({ children }) {
 function Session() {
   const phase = useGameStore((s) => s.phase)
 
+  useEffect(() => {
+    const pauseOnHide = () => { if (document.hidden) useGameStore.getState().pause() }
+    document.addEventListener('visibilitychange', pauseOnHide)
+    return () => document.removeEventListener('visibilitychange', pauseOnHide)
+  }, [])
+
   return (
     <div className="h-screen w-screen relative overflow-hidden">
       <GameCanvas />
       <CollisionFlash />
+      {phase === GAME_STATES.PLAYING && <TouchControls />}
       {(phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED) && <GameHUD />}
       {phase === GAME_STATES.PAUSED && <PauseMenu />}
     </div>
@@ -59,7 +66,6 @@ function Session() {
 // Routes between menu and the in-session 3D scene based on store phase.
 export function GameRouter() {
   const phase = useGameStore((s) => s.phase)
-  const returnToMenu = useGameStore((s) => s.returnToMenu)
 
   if (phase === GAME_STATES.MENU) {
     return <MainMenu />
@@ -69,8 +75,9 @@ export function GameRouter() {
     return <ResultsScreen />
   }
 
-  // LOADING, COUNTDOWN, PLAYING, PAUSED all mount the canvas + overlays.
-  return <LoadingGate>{<Session />}</LoadingGate>
+  const runId = useGameStore.getState().runId
+  // A fresh run mounts a fresh simulation; pausing preserves the same session.
+  return <LoadingGate key={runId}>{<Session />}</LoadingGate>
 }
 
 export default GameRouter

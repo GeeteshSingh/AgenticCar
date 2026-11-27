@@ -9,11 +9,12 @@ export function ResultsScreen() {
   const score = useGameStore((s) => s.score)
   const distanceMeters = useGameStore((s) => s.distanceMeters)
   const survivalTime = useGameStore((s) => s.survivalTime)
-  const speedKmh = useGameStore((s) => s.speedKmh)
+  const speedKmh = useGameStore((s) => s.topSpeed)
   const overtakes = useGameStore((s) => s.overtakes)
   const nearMisses = useGameStore((s) => s.nearMisses)
   const collisions = useGameStore((s) => s.collisions)
   const mode = useGameStore((s) => s.mode)
+  const resultReason = useGameStore(s => s.resultReason)
   const missionComplete = useGameStore((s) => s.missionComplete)
   const startRun = useGameStore((s) => s.startRun)
   const returnToMenu = useGameStore((s) => s.returnToMenu)
@@ -39,11 +40,11 @@ export function ResultsScreen() {
           {missionComplete ? 'MISSION COMPLETE' : 'RUN OVER'}
         </h1>
         <p className="text-slate-400">
-          {missionComplete
+          {resultReason || (missionComplete
             ? 'All objectives finished'
             : mode === 'mission'
               ? 'Mission ended'
-              : 'Vehicle destroyed'}
+              : 'Vehicle destroyed')}
         </p>
       </div>
 

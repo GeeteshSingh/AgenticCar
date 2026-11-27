@@ -66,6 +66,7 @@ export function useKeyboardInput({ enabled = true } = {}) {
     }
 
     const onKeyDown = (e) => {
+      if (e.target instanceof HTMLElement && (e.target.closest('input, select, textarea, [contenteditable=true], .utility-panel, [data-radio-panel]'))) return
       if (pressedRef.current.has(e.code)) return // ignore auto-repeat
       pressedRef.current.add(e.code)
       // Prevent page scroll on arrows/space during play
@@ -85,11 +86,14 @@ export function useKeyboardInput({ enabled = true } = {}) {
     }
 
     window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('keyup', onKeyUp, true)
+    const onFocus = (e) => { if (e.target instanceof HTMLElement && e.target.closest('input,select,textarea,button,.utility-panel')) onBlur() }
+    window.addEventListener('focusin', onFocus)
     window.addEventListener('blur', onBlur)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('keyup', onKeyUp, true)
+      window.removeEventListener('focusin', onFocus)
       window.removeEventListener('blur', onBlur)
     }
   }, [enabled])

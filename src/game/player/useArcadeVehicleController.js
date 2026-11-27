@@ -1,5 +1,6 @@
-import { useRef, useEffect } from 'react'
-import { VEHICLE, KMH_TO_MS, MS_TO_KMH, steerAngleFor } from '@/game/config/vehicleConfig'
+import { useRef } from 'react'
+import { VEHICLE, KMH_TO_MS, steerAngleFor } from '@/game/config/vehicleConfig'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { WORLD } from '@/game/config/gameConfig'
 
 // Arcade vehicle controller. State is held in a ref and integrated in the
@@ -42,9 +43,10 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
     const handbrake = input.handbrake || false
 
     // --- Steering smoothing ---
-    const targetSteer = input.steer || 0
+    const settings = useSettingsStore.getState()
+    const targetSteer = (input.steer || 0) * settings.sensitivity
     const rate = targetSteer === 0 ? VEHICLE.steerReturn : VEHICLE.steerSpeed
-    s.steer += (targetSteer - s.steer) * Math.min(1, rate * dt)
+    s.steer += (Math.max(-1, Math.min(1, targetSteer)) - s.steer) * Math.min(1, rate * dt)
 
     // --- Longitudinal ---
     // The car accelerates on its own (cruise) and the up-arrow "boosts" it to
@@ -62,7 +64,7 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
       accel -= VEHICLE.reversePower * brakeInput
     } else {
       // Auto-cruise toward a comfortable speed; boost (up arrow) pushes to max.
-      const targetSpeed = accelInput > 0 ? VEHICLE.maxSpeed : VEHICLE.cruiseSpeed
+      const targetSpeed = accelInput > 0 ? VEHICLE.maxSpeed : (settings.cruise ? VEHICLE.cruiseSpeed : 0)
       if (s.speed < targetSpeed) {
         accel += VEHICLE.enginePower * (accelInput > 0 ? 1 : 0.6)
       } else if (s.speed > targetSpeed) {
@@ -121,13 +123,6 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
     s.lastAccel = accel
     return s
   }
-
-  // Reset when a new run starts
-  useEffect(() => {
-    if (active) {
-      stateRef.current = createVehicleState()
-    }
-  }, [active])
 
   return { stateRef, update }
 }

@@ -3,7 +3,7 @@
 // cohesive totals blob. Reads config from scoringRules; emits nothing to UI
 // directly — the GameWorld pushes a throttled snapshot to the store.
 
-import { SCORE, distancePoints, overtakePoints, nearMissPoints, multiplierForDistance } from '@/game/scoring/scoringRules'
+import { distancePoints, overtakePoints, nearMissPoints, multiplierForDistance } from '@/game/scoring/scoringRules'
 
 export function createScoringManager() {
   const state = {

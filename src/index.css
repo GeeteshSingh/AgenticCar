@@ -1,12 +1,9 @@
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
-@tailwind base;
 
 @custom-variant dark (&:is(.dark *));
-@tailwind components;
-@tailwind utilities;
 
 @theme inline {
     --font-heading: var(--font-sans);
@@ -131,3 +128,10 @@
     @apply font-sans;
     }
 }
+.utility-button { padding: .65rem 1rem; border: 1px solid #64748b; border-radius: 999px; background: #0f172ae6; color: #e2e8f0; cursor: pointer; }
+.utility-panel { width: min(24rem, calc(100vw - 2rem)); max-height: calc(100dvh - 6rem); overflow-y: auto; margin-top: .75rem; padding: 1.3rem; border: 1px solid #475569; border-radius: 1.2rem; background: #0f172af5; box-shadow: 0 20px 70px #0008; display: grid; gap: 1rem; }
+.utility-panel select, .utility-panel input:not([type=range]):not([type=checkbox]) { background: #1e293b; border: 1px solid #64748b; border-radius: .5rem; color: white; padding: .45rem; min-width: 0; }
+.utility-panel input[type=range] { width: 100%; accent-color: #67e8f9; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid #67e8f9; outline-offset: 4px; }
+button { cursor: pointer; }
+@media (max-width: 640px) { .utility-panel { font-size: .85rem; } }

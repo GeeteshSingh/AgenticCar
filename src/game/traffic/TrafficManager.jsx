@@ -1,3 +1,5 @@
+import { useGameStore } from '@/stores/useGameStore'
+import { roadFrame } from '@/game/world/roadProfile'
 import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { TrafficVehicle } from '@/game/traffic/TrafficVehicle'
@@ -63,7 +65,7 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
   const laneX = (lane) => laneCenterX(lane)
 
   useFrame((_, dt) => {
-    if (!active) return
+    if (!active || useGameStore.getState().phase !== 'playing') return
     dt = trafficStep(dt)
     const playerSpeed = readPlayerSpeed(playerStateRef?.current)
     const t = difficultyFromProgress(distanceRef?.current ?? 0, survivalRef?.current ?? 0)
@@ -76,7 +78,7 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
       v.z += trafficDeltaZ(playerSpeed, v, dt)
       if (v.flash > 0) v.flash = Math.max(0, v.flash - dt)
 
-      if (v.z < TRAFFIC.despawnDistance) {
+      if (v.z < TRAFFIC.despawnDistance || v.z > TRAFFIC.spawnDistance + 100) {
         v.active = false
         v.id = null
         v.hit = false
@@ -139,21 +141,24 @@ export function TrafficManager({ playerStateRef, distanceRef, survivalRef, activ
   return (
     <group>
       {poolRef.current.map((v, i) => (
-        <PoolSlot key={i} vehicle={v} />
+        <PoolSlot key={i} vehicle={v} distanceRef={distanceRef} />
       ))}
     </group>
   )
 }
 
-function PoolSlot({ vehicle }) {
+function PoolSlot({ vehicle, distanceRef }) {
   const groupRef = useRef()
   useFrame(() => {
     const g = groupRef.current
     if (!g) return
     g.visible = vehicle.active
     g.position.z = vehicle.z
-    g.position.x = vehicle.x
-    g.rotation.y = vehicle.direction < 0 ? Math.PI : 0
+    const road = roadFrame(vehicle.z, distanceRef.current)
+    g.position.x = vehicle.x + road.x
+    g.position.y = road.y
+    g.rotation.y = road.heading + (vehicle.direction < 0 ? Math.PI : 0)
+    g.rotation.x = -road.pitch
   })
   return (
     <group ref={groupRef} visible={false}>

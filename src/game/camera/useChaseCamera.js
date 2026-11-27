@@ -30,8 +30,8 @@ export function createChaseCamera() {
         OFFSET.z,
       )
       _lookTarget.set(
-        target.lateralX + LOOK_OFFSET.x,
-        LOOK_OFFSET.y,
+        target.lateralX + (target.lookX || 0) + LOOK_OFFSET.x,
+        LOOK_OFFSET.y + (target.lookY || 0),
         LOOK_OFFSET.z + 2,
       )
 

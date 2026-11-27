@@ -18,7 +18,7 @@ export function createHoodCamera() {
       if (!target) return
       // Position relative to car, but we keep it mostly locked to car rotation
       _pos.set(target.lateralX + OFFSET.x, OFFSET.y, OFFSET.z)
-      _look.set(target.lateralX + target.yaw * 2 + LOOK_AHEAD.x, LOOK_AHEAD.y, LOOK_AHEAD.z)
+      _look.set(target.lateralX + target.yaw * 2 + (target.lookX || 0) + LOOK_AHEAD.x, LOOK_AHEAD.y + (target.lookY || 0), LOOK_AHEAD.z)
 
       if (!initialized.current) {
         camera.position.copy(_pos)

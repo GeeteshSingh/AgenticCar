@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 export const GAME_STATES = {
   MENU: 'menu',
@@ -17,6 +18,7 @@ export const GAME_STATES = {
 export const useGameStore = create((set, get) => ({
   // ---- Session lifecycle ----
   phase: GAME_STATES.MENU,
+  runId: 0,
   mode: null, // 'mission' | 'endless'
 
   // ---- Run stats (updated throttled, not per frame) ----
@@ -34,8 +36,9 @@ export const useGameStore = create((set, get) => ({
   activeObjective: null,
   objectiveCompleted: 0,
   objectiveTotal: 0,
+  resultReason: '',
   missionComplete: false,
-  cameraMode: 'chase', // 'chase' | 'hood'
+  cameraMode: useSettingsStore.getState().camera, // 'chase' | 'hood'
 
   // ---- Actions ----
   setPhase: (phase) => set({ phase }),
@@ -45,6 +48,7 @@ export const useGameStore = create((set, get) => ({
   startRun: (mode) =>
     set({
       mode,
+      runId: get().runId + 1,
       phase: GAME_STATES.LOADING,
       score: 0,
       speedKmh: 0,
@@ -59,8 +63,9 @@ export const useGameStore = create((set, get) => ({
       activeObjective: null,
       objectiveCompleted: 0,
       objectiveTotal: 0,
-      missionComplete: false,
-      cameraMode: 'chase',
+      resultReason: '',
+  missionComplete: false,
+      cameraMode: useSettingsStore.getState().camera,
     }),
 
   beginCountdown: () => set({ phase: GAME_STATES.COUNTDOWN }),
@@ -81,13 +86,14 @@ export const useGameStore = create((set, get) => ({
     else if (phase === GAME_STATES.PAUSED) resume()
   },
 
-  finishRun: (results) =>
-    set({
-      phase: GAME_STATES.RESULTS,
-      score: results?.score ?? get().score,
-      distanceMeters: results?.distanceMeters ?? get().distanceMeters,
-      missionComplete: results?.missionComplete ?? false,
-    }),
+  finishRun: (results = {}) => {
+    const keys = ['score', 'distanceMeters', 'survivalTime', 'speedKmh', 'topSpeed',
+      'integrity', 'multiplier', 'overtakes', 'nearMisses', 'collisions',
+      'objectiveCompleted', 'objectiveTotal']
+    const stats = Object.fromEntries(keys.filter((key) => Number.isFinite(results[key]))
+      .map((key) => [key, results[key]]))
+    set({ ...stats, phase: GAME_STATES.RESULTS, resultReason: typeof results.resultReason === 'string' ? results.resultReason : '', missionComplete: results.missionComplete ?? false })
+  },
 
   returnToMenu: () =>
     set({
@@ -106,8 +112,9 @@ export const useGameStore = create((set, get) => ({
       activeObjective: null,
       objectiveCompleted: 0,
       objectiveTotal: 0,
-      missionComplete: false,
-      cameraMode: 'chase',
+      resultReason: '',
+  missionComplete: false,
+      cameraMode: useSettingsStore.getState().camera,
     }),
 
   toggleCameraMode: () =>

@@ -12,9 +12,9 @@ export function PlayerCar({ stateRef }) {
     const s = stateRef?.current
     if (!groupRef.current || !s) return
     groupRef.current.position.x = s.lateralX
-    groupRef.current.rotation.y = s.yaw
+    groupRef.current.rotation.y = s.yaw + (s.roadHeading || 0)
     groupRef.current.rotation.z = s.bodyRoll
-    groupRef.current.rotation.x = s.bodyPitch
+    groupRef.current.rotation.x = s.bodyPitch - (s.roadPitch || 0)
   })
 
   const L = VEHICLE.length
