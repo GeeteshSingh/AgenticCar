@@ -47,7 +47,7 @@ assert(snap.active && snap.active.id === 'overtake-10', 'advances to second stag
 // Sustained objectives (MAINTAIN_SPEED, COLLISION_FREE) require time to
 // accumulate; drive many frames with healthy stats to finish the mission.
 let reward = firstRes.rewardDelta
-for (let i = 0; i < 800; i++) {
+for (let i = 0; i < 1000; i++) {
   const res = mgr.update(
     { distanceMeters: 99999, survivalTime: 99999, score: 99999, speedKmh: 140, integrity: 100, overtakes: 99, nearMisses: 99, collisions: 0, topSpeed: 160 },
     0.1,
@@ -82,6 +82,45 @@ let prev = once.update({ distanceMeters: 2000, survivalTime: 0, score: 0, speedK
 assert(prev.rewardDelta === 1000, 'first reward 1000')
 let rep = once.update({ distanceMeters: 2000, survivalTime: 0, score: 0, speedKmh: 0, integrity: 100, overtakes: 0, nearMisses: 0, collisions: 0, topSpeed: 0 }, 0.1)
 assert(rep.rewardDelta === 0, 'no repeat reward for same stage')
+
+// Rotations count new progress, even if previous run totals exceed every target.
+const totals = { distanceMeters: 9000, survivalTime: 100, score: 50000, speedKmh: 140, integrity: 100, overtakes: 50, nearMisses: 10, collisions: 0, topSpeed: 160 }
+const rotating = createObjectiveManager({ mode: 'endless' })
+assert(rotating.update(totals, 0.1).rewardDelta > 0, 'initial challenge may use progress since run start')
+rotating.rotateChallenge()
+assert(rotating.update(totals, 0.1).rewardDelta === 0, 'new overtake challenge ignores historical overtakes')
+assert(rotating.snapshot().active.progress === 0, 'new challenge starts at zero')
+assert(rotating.update({ ...totals, overtakes: 65 }, 0.1).rewardDelta === 1200, 'new overtakes complete challenge')
+rotating.rotateChallenge()
+assert(rotating.update(totals, 0.1).rewardDelta === 0, 'distance challenge ignores historical distance')
+assert(rotating.update({ ...totals, distanceMeters: 12000 }, 0.1).rewardDelta === 1000, 'new distance completes challenge')
+rotating.rotateChallenge()
+assert(rotating.update({ ...totals, score: 51000 }, 0.1).rewardDelta === 0, 'last challenge reward alone is not score progress')
+assert(rotating.update({ ...totals, score: 71000 }, 0.1).rewardDelta === 1500, 'new score completes challenge')
+rotating.rotateChallenge()
+assert(rotating.update(totals, 0.1).rewardDelta === 0, 'wrapping challenge pool does not reuse near misses')
+for (let i = 0; i < 100; i++) assert(rotating.update(totals, 0.1).rewardDelta === 0, 'unchanged stats never farm rewards')
+rotating.reset()
+assert(rotating.snapshot().active.progress === 0 && rotating.state.rewardsEarned === 0, 'reset clears challenge progress/rewards')
+assert(rotating.update({ ...totals, nearMisses: 0 }, 0.1).rewardDelta === 0, 'reset clears prior encounter state')
+
+// Sustained objectives begin timing only when that stage becomes active.
+const timed = createObjectiveManager({ mode: 'mission' })
+timed.update({ ...totals, distanceMeters: 0 }, 120)
+timed.update(totals, 0.1) // distance stage
+timed.update(totals, 0.1) // overtake stage
+assert(timed.snapshot().active.type === OBJECTIVE_TYPE.MAINTAIN_SPEED, 'speed stage becomes active')
+assert(timed.update(totals, 0.1).rewardDelta === 0, 'prior fast driving does not complete newly activated speed stage')
+timed.update(totals, 29)
+assert(timed.update({ ...totals, speedKmh: 50 }, 1).rewardDelta === 0, 'dropping speed resets consecutive timer')
+timed.update(totals, 30)
+assert(timed.snapshot().active.type === OBJECTIVE_TYPE.COLLISION_FREE, 'clean-run stage follows speed stage')
+assert(timed.update(totals, 0.1).rewardDelta === 0, 'prior collision-free time does not pre-complete clean-run stage')
+timed.update(totals, 59)
+assert(timed.update({ ...totals, collisions: 1 }, 1).rewardDelta === 0, 'collision tick cannot earn clean-run reward')
+timed.reset()
+assert(timed.state.maintainSpeedSeconds === 0 && timed.state.collisionFreeSeconds === 0, 'reset clears sustained timers')
+assert(timed.snapshot().active.id === 'dist-2km', 'mission reset returns first stage')
 
 console.log(fail === 0 ? 'ALL OBJECTIVE TESTS PASSED' : fail + ' OBJECTIVE TESTS FAILED')
 process.exit(fail === 0 ? 0 : 1)
