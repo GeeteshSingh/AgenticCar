@@ -11,6 +11,7 @@ export function GameHUD() {
   const speed = useGameStore(s => s.speedKmh)
   const distance = useGameStore(s => s.distanceMeters)
   const integrity = useGameStore(s => s.integrity)
+  const nearbyPlace = useGameStore(s => s.nearbyPlace)
   const score = useGameStore(s => s.score)
   const mode = useGameStore(s => s.mode)
   const camera = useGameStore(s => s.cameraMode)
@@ -19,10 +20,11 @@ export function GameHUD() {
   const vehicle = useSettingsStore(s=>s.vehicle)
   const [shortcuts, setShortcuts] = useState(false)
   const [controlsOpen, setControlsOpen] = useState(false)
-  const relaxed = mode === 'relaxed'
+  const relaxed = mode === 'relaxed' || environment === 'thar_test'
   return <div className="drive-hud" aria-label="Driving instruments">
     <div className="drive-hud-context"><span>{routeName(environment)}</span><button className="drive-hud-mobile-toggle" aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}>Controls</button><div className={`drive-hud-actions ${controlsOpen ? 'is-open' : ''}`}><span>{playerVehicle(vehicle).name} · 1–9</span><button className="drive-hud-pause" onClick={() => {useGameStore.getState().toggleCameraMode(); useSettingsStore.getState().setSetting('camera', useGameStore.getState().cameraMode)}}>View: {camera} · C</button><button className="drive-hud-pause" aria-expanded={shortcuts} onClick={() => setShortcuts(!shortcuts)}>Vehicles · 1–9</button><button className="drive-hud-pause" onClick={requestHorn}>Horn · H</button><button className="drive-hud-pause" onClick={() => {useSettingsStore.getState().setSetting('engineVolume', .5); requestAudioStart()}}>Enable sound</button><button className="drive-hud-pause" onClick={pause}>Pause</button></div></div>
     {shortcuts && <div className="vehicle-shortcuts" aria-label="Switch vehicle">{PLAYER_VEHICLES.slice(0, 9).map((v, i) => <button key={v.name} aria-pressed={vehicle === i} onClick={() => {useSettingsStore.getState().setSetting('vehicle', i); setShortcuts(false)}}><kbd>{i + 1}</kbd> {v.name}</button>)}</div>}
+    {nearbyPlace && <div className="drive-hud-objective" role="status">{nearbyPlace}</div>}
     {!relaxed && <div className="drive-hud-objective"><ObjectiveDisplay /></div>}
     <div className="drive-hud-dashboard">
       <div className="drive-hud-speed" aria-label={`${Math.round(Math.abs(speed))} kilometers per hour`}>{Math.round(Math.abs(speed))}<small>km/h{speed < 0 ? ' · R' : ''}</small></div>

@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { roadFrame, terrainHeight } from './roadProfile'
 
-const ROUTES = { kashmir: 'JAMMU & KASHMIR', countryside: 'DECCAN PLATEAU', forest: 'WESTERN GHATS', desert: 'THAR DESERT', coast: 'KONKAN COAST' }
+const ROUTES = { thar_test: 'TEST ROUTE', kashmir: 'JAMMU & KASHMIR', countryside: 'DECCAN PLATEAU', forest: 'WESTERN GHATS', desert: 'THAR DESERT', coast: 'KONKAN COAST' }
 const SPACING = 180
 const COUNT = 5
 

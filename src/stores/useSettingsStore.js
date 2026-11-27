@@ -14,7 +14,7 @@ function restore() {
     return saved
   } catch { return {} }
 }
-const choices = {environment: ['countryside','forest','desert','coast','kashmir'], time: ['day','sunset','night','sunrise'], weather: ['clear','fog','rain'], quality: ['low','medium','high'], camera: ['chase','hood','interior']}
+const choices = {environment: ['countryside','forest','desert','coast','kashmir','thar_test'], time: ['day','sunset','night','sunrise'], weather: ['clear','fog','rain'], quality: ['low','medium','high'], camera: ['chase','hood','interior']}
 function sanitize(values) {
   if (!values || typeof values !== 'object' || Array.isArray(values)) values = {}
   const out = { ...defaults }

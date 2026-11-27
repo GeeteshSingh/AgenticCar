@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node --no-warnings --experimental-loader ./alias-loader.mjs ./spawn-safety.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./collision.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./scoring.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./objectives.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./lifecycle.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./traffic-regression.test.mjs && node world.test.mjs && node radio.test.mjs && node settings.test.mjs && node vehicles.test.mjs && node impact.test.mjs && node driving-audio.test.mjs",
+    "test": "node --no-warnings --experimental-loader ./alias-loader.mjs ./spawn-safety.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./collision.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./scoring.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./objectives.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./lifecycle.test.mjs && node --no-warnings --experimental-loader ./alias-loader.mjs ./traffic-regression.test.mjs && node world.test.mjs && node real-route.test.mjs && node free-roam.test.mjs && node radio.test.mjs && node settings.test.mjs && node vehicles.test.mjs && node impact.test.mjs && node driving-audio.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
