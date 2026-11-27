@@ -1,192 +1,160 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { WORLD } from '@/game/config/gameConfig'
+import { roadFrame, terrainHeight, WORLD_PALETTES } from './roadProfile'
 
-// Recycled endless highway styled as a calm, low-poly asphalt road winding
-// through rolling hills (per the reference art direction). A pool of road
-// segments scrolls toward the camera (the car is fixed at z=0; the world moves
-// -z). Segments / scenery that pass behind the player are repositioned ahead.
-// No unbounded object creation: fixed pools of meshes are reused.
+const LENGTH = 48
+const COUNT = 16
+const STEPS = 12
+const WIDTHS = [-320, -180, -100, -55, -26, -10, 10, 26, 55, 100, 180, 320]
+const TEMP = new THREE.Object3D()
 
-const SEGMENT_LENGTH = 40
-const SEGMENT_COUNT = 16 // covers ~640 units of road
-
-export function EndlessHighway({ scrollRef }) {
-  const groupRef = useRef()
-
-  // Shared materials (created once).
-  const roadMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#3a3d44', roughness: 0.95 }), [])
-  const groundMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#9aa83f', roughness: 1 }), [])
-  const hillMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#8a9a36', roughness: 1 }), [])
-  const grassMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#a7b347', roughness: 1 }), [])
-  const edgeLineMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#f4f4f5', emissive: '#e5e5e5', emissiveIntensity: 0.15 }), [])
-  const centerLineMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#facc15', emissive: '#facc15', emissiveIntensity: 0.2 }), [])
-  const railMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#b8c0cc', metalness: 0.7, roughness: 0.35 }), [])
-  const railPostMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#6b7280', metalness: 0.6, roughness: 0.5 }), [])
-  const trunkMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#4b3621', roughness: 1 }), [])
-  const pineMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#1f5132', roughness: 1 }), [])
-
-  const positions = useMemo(
-    () => Array.from({ length: SEGMENT_COUNT }, (_, i) => i * SEGMENT_LENGTH),
-    [],
-  )
-
-  // Rolling hills on both sides — a fixed recycled pool, kept well clear of
-  // the road so their cones never intersect the asphalt.
-  const hills = useMemo(() => {
-    const arr = []
-    const perSide = 3
-    for (let i = 0; i < SEGMENT_COUNT; i++) {
-      for (let h = 0; h < perSide; h++) {
-        const z = i * SEGMENT_LENGTH + (h / perSide) * SEGMENT_LENGTH
-        const side = (i + h) % 2 === 0 ? 1 : -1
-        const height = 26 + ((i * 13 + h * 7) % 30)
-        const radius = 26 + ((i + h) % 3) * 8
-        // Place the cone so its BASE sits on the ground and its near edge
-        // stays at least a few meters beyond the shoulder.
-        const x = side * (WORLD.roadWidth / 2 + WORLD.shoulderWidth + radius + 14 + (h % 2) * 18)
-        arr.push({ x, z, height, radius })
-      }
+// Fixed geometry pools; positions are rewritten in place. Adjacent strips
+// sample identical absolute coordinates at their seam, including on recycle.
+function makeStrip(offsets, steps = STEPS) {
+  const geometry = new THREE.BufferGeometry()
+  const positions = new Float32Array((steps + 1) * offsets.length * 3)
+  const indices = []
+  for (let z = 0; z < steps; z++) {
+    for (let x = 0; x < offsets.length - 1; x++) {
+      const a = z * offsets.length + x
+      indices.push(a, a + offsets.length, a + 1, a + 1, a + offsets.length, a + offsets.length + 1)
     }
-    return arr
-  }, [])
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage))
+  geometry.setIndex(indices)
+  return geometry
+}
 
-  // Roadside dark-green pines — a fixed recycled pool.
-  const pines = useMemo(() => {
-    const arr = []
-    const perSide = 5
-    for (let i = 0; i < SEGMENT_COUNT; i++) {
-      for (let t = 0; t < perSide; t++) {
-        const z = i * SEGMENT_LENGTH + (t / perSide) * SEGMENT_LENGTH
-        const side = (i + t) % 2 === 0 ? 1 : -1
-        const x = side * (WORLD.roadWidth / 2 + WORLD.shoulderWidth + 10 + (t % 3) * 5)
-        arr.push({ x, z, scale: 0.85 + ((i * 5 + t) % 4) * 0.18 })
-      }
+function writeStrip(geometry, offsets, start, distance, environment, lift, terrain = false, frames) {
+  const points = geometry.attributes.position.array
+  for (let i = 0; i <= STEPS; i++) {
+    const z = start + i * LENGTH / STEPS
+    const frame = frames ? frames[i] : roadFrame(z, distance)
+    for (let j = 0; j < offsets.length; j++) {
+      const k = (i * offsets.length + j) * 3
+      points[k] = frame.x + offsets[j]
+      points[k + 1] = frame.y + lift + (terrain ? terrainHeight(offsets[j], distance + z, environment) : 0)
+      points[k + 2] = z
     }
-    return arr
-  }, [])
+  }
+  geometry.attributes.position.needsUpdate = true
+  geometry.computeVertexNormals()
+  geometry.computeBoundingSphere()
+}
 
-  const roadGroupRef = useRef()
-  const hillGroupRef = useRef()
-  const pineGroupRef = useRef()
+export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
+  const travelled = useRef(0)
+  const trees = useRef()
+  const trunks = useRef()
+  const rocks = useRef()
+  const environment = settings.environment || 'countryside'
+  const palette = WORLD_PALETTES[environment] || WORLD_PALETTES.countryside
+  const materials = useMemo(() => ({
+    ground: new THREE.MeshStandardMaterial({ roughness: 1 }),
+    shoulder: new THREE.MeshStandardMaterial({ roughness: 1 }),
+    road: new THREE.MeshStandardMaterial({ color: '#333b43', roughness: 0.98 }),
+    white: new THREE.MeshBasicMaterial({ color: '#e6e5ce' }),
+    yellow: new THREE.MeshBasicMaterial({ color: '#efcc81' }),
+    water: new THREE.MeshStandardMaterial({ color: '#559ba9', roughness: 0.35, metalness: 0.2 }),
+  }), [])
+  useEffect(() => {
+    materials.ground.color.set(palette.ground)
+    materials.shoulder.color.set(palette.shoulder)
+  }, [materials, palette])
+  useEffect(() => () => Object.values(materials).forEach((material) => material.dispose()), [materials])
+  const half = WORLD.roadWidth / 2
+  const strips = useMemo(() => Array.from({ length: COUNT }, () => ({
+    ground: makeStrip(WIDTHS),
+    water: makeStrip([26, 400]),
+    road: makeStrip([-half, half]),
+    shoulder: makeStrip([-10, -half, half, 10]),
+    lines: [-half + 0.25, -4, 0, 4, half - 0.25].map((x) => ({ x, geometry: makeStrip([x - 0.065, x + 0.065]) })),
+  })), [half])
+  useEffect(() => () => {
+    for (const strip of strips) {
+      strip.ground.dispose(); strip.road.dispose(); strip.shoulder.dispose(); strip.water.dispose()
+      for (const line of strip.lines) line.geometry.dispose()
+    }
+  }, [strips])
 
   useFrame((_, dt) => {
-    const scrollSpeed = scrollRef?.current ?? 0
-    const scrollAndRecycle = (group) => {
-      if (!group?.current) return
-      for (let i = 0; i < group.current.children.length; i++) {
-        const seg = group.current.children[i]
-        seg.position.z -= scrollSpeed * dt
-        if (seg.position.z < -SEGMENT_LENGTH * 1.5) {
-          let maxZ = -Infinity
-          for (let j = 0; j < group.current.children.length; j++) {
-            maxZ = Math.max(maxZ, group.current.children[j].position.z)
+    if (distanceRef) travelled.current = distanceRef.current
+    else travelled.current += Math.max(0, scrollRef?.current || 0) * Math.min(dt, 0.1)
+    const distance = travelled.current
+    const base = Math.floor(distance / LENGTH) * LENGTH - distance - LENGTH * 2
+    for (let i = 0; i < COUNT; i++) {
+      const start = base + i * LENGTH
+      const strip = strips[i]
+      const frames = Array.from({ length: STEPS + 1 }, (_, row) => roadFrame(start + row * LENGTH / STEPS, distance))
+      if (environment === 'coast') writeStrip(strip.water, [26, 400], start, distance, environment, -3, false, frames)
+      writeStrip(strip.ground, WIDTHS, start, distance, environment, -0.08, true, frames)
+      writeStrip(strip.shoulder, [-10, -half, half, 10], start, distance, environment, -0.03, false, frames)
+      writeStrip(strip.road, [-half, half], start, distance, environment, 0, false, frames)
+      for (const line of strip.lines) {
+        writeStrip(line.geometry, [line.x - 0.065, line.x + 0.065], start, distance, environment, 0.018, false, frames)
+        // Turn off alternate quads in lane markers using degenerate triangles.
+        if (Math.abs(line.x) !== half - 0.25) {
+          const indices = line.geometry.index.array
+          for (let row = 0; row < STEPS; row++) {
+            const a = row * 2
+            const hidden = ((Math.round((distance + start) / 4) + row) % 3 + 3) % 3 === 0
+            indices.set(hidden ? [a, a, a, a, a, a] : [a, a + 2, a + 1, a + 1, a + 2, a + 3], row * 6)
           }
-          seg.position.z = maxZ + SEGMENT_LENGTH
+          line.geometry.index.needsUpdate = true
         }
       }
     }
-    scrollAndRecycle(roadGroupRef)
-    scrollAndRecycle(hillGroupRef)
-    scrollAndRecycle(pineGroupRef)
+    if (!trees.current || !trunks.current || !rocks.current) return
+    const low = settings.quality === 'low'
+    for (let i = 0; i < 240; i++) {
+      const side = i % 2 === 0 ? -1 : 1
+      const globalZ = (Math.floor(distance / 8) + Math.floor(i / 2) - 10) * 8
+      const z = globalZ - distance
+      const frame = roadFrame(z, distance)
+      const cell = Math.floor(globalZ / 8)
+      const hash = (n, m) => ((n % m) + m) % m
+      const offset = side * (16 + hash(cell * 37, 60))
+      const scale = 0.8 + hash(cell * 13, 10) / 10
+      const visible = (!low || hash(cell, 3) === 0) && !(environment === 'coast' && side > 0) && !(environment === 'desert' && hash(cell, 5) !== 0)
+      const y = frame.y + terrainHeight(offset, globalZ, environment)
+      TEMP.position.set(frame.x + offset, y + scale * 3, z)
+      TEMP.rotation.set(0, cell, 0)
+      TEMP.scale.set(visible ? scale : 0, visible ? scale : 0, visible ? scale : 0)
+      TEMP.updateMatrix(); trees.current.setMatrixAt(i, TEMP.matrix)
+      TEMP.position.y = y + scale
+      TEMP.scale.set(visible ? scale * 0.24 : 0, visible ? scale : 0, visible ? scale * 0.24 : 0)
+      TEMP.updateMatrix(); trunks.current.setMatrixAt(i, TEMP.matrix)
+      const rockOffset = side * (48 + hash(cell * 19, 220))
+      TEMP.position.set(frame.x + rockOffset, frame.y + terrainHeight(rockOffset, globalZ, environment) - 3, z)
+      TEMP.scale.set(7 + hash(cell, 8), 7 + hash(cell, 13), 8 + hash(cell, 5))
+      TEMP.updateMatrix(); rocks.current.setMatrixAt(i, TEMP.matrix)
+    }
+    trees.current.instanceMatrix.needsUpdate = true
+    trunks.current.instanceMatrix.needsUpdate = true
+    rocks.current.instanceMatrix.needsUpdate = true
   })
 
-  const halfRoad = WORLD.roadWidth / 2
-  const railX = halfRoad + WORLD.shoulderWidth
-
   return (
-    <group ref={groupRef}>
-      {/* Broad ground (yellow-green, sun-drenched) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, 0]} receiveShadow>
-        <planeGeometry args={[600, 1400]} />
-        <primitive object={groundMat} attach="material" />
-      </mesh>
+    <group>
+      {strips.map((strip, i) => <group key={i}>
+        {environment === 'coast' && <mesh geometry={strip.water} material={materials.water} />}
+        <mesh geometry={strip.ground} material={materials.ground} receiveShadow />
+        <mesh geometry={strip.shoulder} material={materials.shoulder} receiveShadow />
+        <mesh geometry={strip.road} material={materials.road} receiveShadow />
+        {strip.lines.map((line) => <mesh key={line.x} geometry={line.geometry} material={line.x === 0 ? materials.yellow : materials.white} />)}
+      </group>)}
+      <instancedMesh ref={trees} args={[null, null, 240]} frustumCulled={false}>
+        <coneGeometry args={[2.2, 6, 6]} /><meshStandardMaterial color={palette.foliage} roughness={1} />
+      </instancedMesh>
+      <instancedMesh ref={trunks} args={[null, null, 240]} frustumCulled={false}>
+        <cylinderGeometry args={[1, 1.4, 2, 5]} /><meshStandardMaterial color="#635244" roughness={1} />
+      </instancedMesh>
+      <instancedMesh ref={rocks} args={[null, null, 240]} frustumCulled={false}>
+        <icosahedronGeometry args={[1, 0]} /><meshStandardMaterial color={palette.hills} roughness={1} />
+      </instancedMesh>
 
-      {/* Road + markings + guardrail train */}
-      <group ref={roadGroupRef}>
-        {positions.map((z, i) => (
-          <group key={i} position={[0, 0, z]}>
-            {/* Asphalt surface */}
-            <mesh receiveShadow position={[0, 0, 0]}>
-              <boxGeometry args={[WORLD.roadWidth, 0.2, SEGMENT_LENGTH]} />
-              <primitive object={roadMat} attach="material" />
-            </mesh>
-            {/* Shoulders (slightly raised dirt) */}
-            <mesh position={[halfRoad + WORLD.shoulderWidth / 2, -0.05, 0]}>
-              <boxGeometry args={[WORLD.shoulderWidth, 0.1, SEGMENT_LENGTH]} />
-              <primitive object={grassMat} attach="material" />
-            </mesh>
-            <mesh position={[-halfRoad - WORLD.shoulderWidth / 2, -0.05, 0]}>
-              <boxGeometry args={[WORLD.shoulderWidth, 0.1, SEGMENT_LENGTH]} />
-              <primitive object={grassMat} attach="material" />
-            </mesh>
-
-            {/* Edge lines (white) along both road borders */}
-            <mesh position={[halfRoad - 0.25, 0.12, 0]}>
-              <boxGeometry args={[0.16, 0.02, SEGMENT_LENGTH * 0.85]} />
-              <primitive object={edgeLineMat} attach="material" />
-            </mesh>
-            <mesh position={[-halfRoad + 0.25, 0.12, 0]}>
-              <boxGeometry args={[0.16, 0.02, SEGMENT_LENGTH * 0.85]} />
-              <primitive object={edgeLineMat} attach="material" />
-            </mesh>
-            {/* Center dashed line (yellow) between lanes 1 and 2 */}
-            <mesh position={[0, 0.12, 0]}>
-              <boxGeometry args={[0.16, 0.02, SEGMENT_LENGTH * 0.4]} />
-              <primitive object={centerLineMat} attach="material" />
-            </mesh>
-
-            {/* Guardrail on the left shoulder (metal), with posts */}
-            <mesh position={[-railX, 0.6, 0]}>
-              <boxGeometry args={[0.18, 0.9, SEGMENT_LENGTH]} />
-              <primitive object={railMat} attach="material" />
-            </mesh>
-            {Array.from({ length: 4 }, (_, p) => (
-              <mesh key={p} position={[-railX, 0.3, -SEGMENT_LENGTH / 2 + (p + 0.5) * (SEGMENT_LENGTH / 4)]}>
-                <boxGeometry args={[0.14, 0.6, 0.14]} />
-                <primitive object={railPostMat} attach="material" />
-              </mesh>
-            ))}
-
-            {/* Soft grass strip on the right shoulder (no rail) */}
-            <mesh position={[railX, 0.05, 0]}>
-              <boxGeometry args={[2, 0.12, SEGMENT_LENGTH]} />
-              <primitive object={grassMat} attach="material" />
-            </mesh>
-          </group>
-        ))}
-      </group>
-
-      {/* Rolling hills (recycled) */}
-      <group ref={hillGroupRef}>
-        {hills.map((m, i) => (
-          <mesh key={i} position={[m.x, m.height / 2 - 1, m.z]} frustumCulled={false}>
-            <coneGeometry args={[m.radius, m.height, 6]} />
-            <primitive object={hillMat} attach="material" />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Roadside dark-green pines (recycled) */}
-      <group ref={pineGroupRef}>
-        {pines.map((tree, i) => (
-          <group key={i} position={[tree.x, 0, tree.z]} scale={tree.scale}>
-            <mesh position={[0, 1, 0]} castShadow>
-              <cylinderGeometry args={[0.28, 0.4, 2, 6]} />
-              <primitive object={trunkMat} attach="material" />
-            </mesh>
-            <mesh position={[0, 3.1, 0]} castShadow>
-              <coneGeometry args={[1.5, 3.2, 7]} />
-              <primitive object={pineMat} attach="material" />
-            </mesh>
-            <mesh position={[0, 4.6, 0]} castShadow>
-              <coneGeometry args={[1.1, 2.6, 7]} />
-              <primitive object={pineMat} attach="material" />
-            </mesh>
-          </group>
-        ))}
-      </group>
     </group>
   )
 }
