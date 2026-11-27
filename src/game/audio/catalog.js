@@ -18,6 +18,7 @@ export function safeRadioUrl(value) {
 }
 const text = (v, max = 180) => typeof v === 'string' ? v.trim().slice(0, max) : ''
 export function normalizeStation(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const streamUrl = safeRadioUrl(raw.url_resolved || raw.url || raw.streamUrl)
   if (!streamUrl) return null
   return {
