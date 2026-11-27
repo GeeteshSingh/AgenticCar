@@ -30,7 +30,7 @@ export function MainMenu() {
     </div>
     <div className="drive-menu-shade" />
     <div className="drive-menu-content">
-      <header className="drive-menu-header"><span>AgenticCar</span><button className="drive-text-button" onClick={() => setAbout(!about)} aria-expanded={about}>About</button></header>
+      <header className="drive-menu-header"><span>Wayfound</span><button className="drive-text-button" onClick={() => setAbout(!about)} aria-expanded={about}>About</button></header>
       <section className="drive-menu-intro" aria-labelledby="drive-title">
         <h1 id="drive-title">A little further.<br />A little slower.</h1>
         <p>An open road and a moment to yourself. Explore India-inspired routes, tune the radio, and find your own pace.</p>
@@ -41,7 +41,7 @@ export function MainMenu() {
         <Button className="drive-start" onClick={() => startRun(mode)}>Start {modes.find(m => m.id === mode).title.toLowerCase()}<ArrowRight aria-hidden="true" /></Button>
         <p className="drive-menu-hint">WASD or arrows to drive · C camera · Esc pause</p>
       </section>
-      {about && <section className="drive-about" aria-label="About AgenticCar"><h2>Made for the road</h2><p>AgenticCar is an endless driving game built with React and Three.js. Routes are original procedural interpretations of Indian regions, not geographic replicas. Landscapes are generated in the browser; live radio comes from Radio Browser. Open Settings to adjust your drive, graphics, and sound.</p></section>}
+      {about && <section className="drive-about" aria-label="About Wayfound"><h2>Made for the road</h2><p>Wayfound is an endless driving game built with React and Three.js. Routes are original procedural interpretations of Indian regions, not geographic replicas. Landscapes are generated in the browser; live radio comes from Radio Browser. Open Settings to adjust your drive, graphics, and sound.</p></section>}
       <footer className="drive-menu-footer"><span>Highway Objective</span><span>Choose a view. Enjoy the journey.</span></footer>
     </div>
   </main>
