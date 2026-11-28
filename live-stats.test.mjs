@@ -78,3 +78,26 @@ clock = 30000; listener(); assert.equal(heartbeatCount, 2)
 assert.equal(timerAt, 55000)
 clock = timerAt; pendingTimer(); assert.equal(heartbeatCount, 3)
 remount()
+
+const { createStatsPoller } = await import('./src/config/liveStats.js')
+let pollClock = 0, pollVisible = true, polls = 0, pollListener, pollTimer, pollAt, finishLoad
+const poller = createStatsPoller({
+  load: () => { polls++; return new Promise(resolve => { finishLoad = resolve }) },
+  visible: () => pollVisible, now: () => pollClock,
+  setTimer: (fn, ms) => { pollTimer = fn; pollAt = pollClock + ms; return fn },
+  clearTimer: () => { pollTimer = null },
+  subscribe: fn => { pollListener = fn; return () => {} },
+})
+const valuesA = [], valuesB = []
+const stopA = poller(value => valuesA.push(value))
+const stopB = poller(value => valuesB.push(value))
+pollListener(); await Promise.resolve(); assert.equal(polls, 1)
+finishLoad({online: 3,total: 100})
+await new Promise(resolve => setTimeout(resolve, 0))
+assert.deepEqual(valuesA.at(-1), valuesB.at(-1))
+pollClock = 5000; pollListener(); assert.equal(polls, 1)
+assert.equal(pollAt, 60000)
+pollClock = 60000; pollVisible = false; pollTimer(); assert.equal(polls, 1)
+pollVisible = true; pollListener(); await Promise.resolve(); assert.equal(polls, 2)
+finishLoad(null); await new Promise(resolve => setTimeout(resolve, 0))
+stopA(); stopB()

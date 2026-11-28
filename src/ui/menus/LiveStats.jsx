@@ -1,25 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { LIVE_STATS, formatLiveStats, loadLiveStats } from '@/config/liveStats'
+import { formatLiveStats, subscribeLiveStats } from '@/config/liveStats'
 
 export function LiveStats() {
   const [stats, setStats] = useState(null), [display, setDisplay] = useState(null)
   const previous = useRef(null)
-  useEffect(() => {
-    let active = true, controller, serial = 0
-    async function poll() {
-      if (document.hidden) return
-      controller?.abort(); controller = new AbortController()
-      const current = ++serial
-      const timeout = setTimeout(() => controller.abort(), LIVE_STATS.timeoutMs)
-      const result = await loadLiveStats(fetch, controller.signal)
-      if (active && current === serial) setStats(result)
-      clearTimeout(timeout)
-    }
-    const visible = () => { if (!document.hidden) poll(); else { serial++; controller?.abort(); setStats(null) } }
-    poll(); const timer = setInterval(poll, LIVE_STATS.pollMs)
-    document.addEventListener('visibilitychange', visible)
-    return () => { active = false; clearInterval(timer); controller?.abort(); document.removeEventListener('visibilitychange', visible) }
-  }, [])
+  useEffect(() => subscribeLiveStats(setStats), [])
   useEffect(() => {
     if (!stats) { setDisplay(null); previous.current = null; return }
     const start = previous.current || stats
