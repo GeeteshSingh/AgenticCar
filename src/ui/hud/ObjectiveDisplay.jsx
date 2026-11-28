@@ -1,4 +1,5 @@
 import { useGameStore } from '@/stores/useGameStore'
+import { useEffect, useState } from 'react'
 
 // Active objective panel. For mission mode shows the current sequential stage
 // with progress; for endless mode shows the rotating optional challenge.
@@ -8,6 +9,12 @@ export function ObjectiveDisplay() {
   const mode = useGameStore((s) => s.mode)
   const completedCount = useGameStore((s) => s.objectiveCompleted)
   const totalCount = useGameStore((s) => s.objectiveTotal)
+  const [collapsed, setCollapsed] = useState(false)
+  useEffect(() => {
+    setCollapsed(false)
+    const timer = setTimeout(() => setCollapsed(true), 5000)
+    return () => clearTimeout(timer)
+  }, [objective?.id])
 
   if (!objective) return null
 
@@ -15,7 +22,9 @@ export function ObjectiveDisplay() {
   const isEndless = mode === 'endless'
 
   return (
-    <div className="bg-slate-900/70 border border-slate-700 backdrop-blur-sm rounded-lg px-3 py-2 pointer-events-auto w-56">
+    <div className={`objective-card ${collapsed ? 'is-collapsed' : ''} bg-slate-900/70 border border-slate-700 backdrop-blur-sm rounded-lg px-3 py-2 pointer-events-auto w-56`}>
+      <button className="objective-pill" aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)}>{objective.title} · {pct}%</button>
+      <div className="objective-details" onClick={() => setCollapsed(true)}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-[10px] uppercase tracking-widest text-cyan-400">
           {isEndless ? 'Challenge' : `Objective ${completedCount + 1}/${totalCount}`}
@@ -37,6 +46,7 @@ export function ObjectiveDisplay() {
       <div className="mt-1 flex justify-between text-[10px] text-slate-500">
         <span>+{objective.reward} pts</span>
         <span className="tabular-nums">{pct}%</span>
+      </div>
       </div>
     </div>
   )

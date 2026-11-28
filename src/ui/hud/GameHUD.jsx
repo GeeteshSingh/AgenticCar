@@ -30,7 +30,7 @@ export function GameHUD() {
     {shortcuts && <div className="vehicle-shortcuts" aria-label="Switch vehicle">{PLAYER_VEHICLES.slice(0, 9).map((v, i) => <button key={v.name} aria-pressed={vehicle === i} onClick={() => {useSettingsStore.getState().setSetting('vehicle', i); setShortcuts(false)}}><kbd>{i + 1}</kbd> {v.name}</button>)}</div>}
     {nearbyPlace && <div className="drive-hud-objective" role="status">{nearbyPlace} {nearbyPlace.startsWith('Desert Market') && <button className="drive-hud-pause" onClick={() => { pause(); setShopOpen(true) }}>Enter shop</button>}</div>}
     {shopOpen && <ChunkBoundary onClose={() => { setShopOpen(false); useGameStore.getState().resume() }}><Suspense fallback={<div role="status" className="fixed inset-0 z-50 grid place-items-center bg-slate-950 text-white">Opening shop…</div>}><MarketPanel onClose={() => { setShopOpen(false); useGameStore.getState().resume() }} /></Suspense></ChunkBoundary>}
-    {!relaxed && <div className="drive-hud-objective"><ObjectiveDisplay /></div>}
+    {!relaxed && <div className={`drive-hud-objective ${controlsOpen ? "controls-open" : ""}`}><ObjectiveDisplay /></div>}
     <div className="drive-hud-dashboard">
       <div className="drive-hud-speed" aria-label={`${Math.round(Math.abs(speed))} kilometers per hour`}>{Math.round(Math.abs(speed))}<small>km/h{speed < 0 ? ' · R' : ''}</small></div>
       <div className="drive-hud-stat">{(distance / 1000).toFixed(2)}<small>kilometers</small></div>
