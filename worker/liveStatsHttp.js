@@ -5,6 +5,7 @@ export function jsonResponse(body, status = 200, cache = 'no-store', extra = {})
 }
 
 export async function handleApi(request, env) {
+  if (String(env.LIVE_STATS_ENABLED ?? 'true').toLowerCase() === 'false') return jsonResponse({ error: 'Not found' }, 404)
   const url = new URL(request.url), path = url.pathname
   if (!['/api/hb', '/api/start', '/api/stats'].includes(path)) return jsonResponse({ error: 'Not found' }, 404)
   const origin = request.headers.get('origin')

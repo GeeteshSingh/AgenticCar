@@ -52,3 +52,6 @@ for (const [req, status] of [
   assert.equal(response.headers.get('access-control-allow-origin'), null)
 }
 assert.equal(called, 0)
+
+assert.equal((await handleApi(request('/api/stats'), { ...env, LIVE_STATS_ENABLED:'false' })).status, 404)
+assert.equal(called, 0)

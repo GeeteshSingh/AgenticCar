@@ -70,3 +70,9 @@ For a preview check, open two separate browsers, start a drive in each, and conf
 The Cloudflare deployment applies `public/_headers`; `npm run preview` does not reproduce those hosting headers. On the deployed site, open Chrome DevTools → Console, reload, then test each route, WebAssembly physics, radio search and playback, station artwork, fonts, and the free-roam shop. Look for `Content Security Policy` report-only messages and record the blocked URL and directive. Test any supported third-party streams before tightening the policy.
 
 Only after investigation and browser testing show that legitimate resources work, change `Content-Security-Policy-Report-Only:` to `Content-Security-Policy:` in `public/_headers`, deploy, and repeat the checks. Report-only messages do not block resources; enforcement does.
+
+### Live counter switch and removal
+
+The counter is enabled by default. In Cloudflare Workers & Pages, open the WayFound Worker, choose Settings → Variables and Secrets, and set `LIVE_STATS_ENABLED` to the text `false` for the relevant environment. Apply the configuration change in Cloudflare; whether the dashboard creates a new Worker version or requires deployment depends on Cloudflare's current workflow. The game hides the counter on a 404. Set it to `true` or remove it to re-enable. Check production and preview settings separately.
+
+To remove the Durable Object permanently in a future deployment, first remove the API code and both `LIVE_STATS` bindings, then append a new migration such as `{ "tag": "v2", "deleted_classes": ["LiveStats"] }` to `migrations`. Deleting the class deletes its stored data; verify Cloudflare's migration instructions and retain the existing migration history before deploying.
