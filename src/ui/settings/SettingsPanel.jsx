@@ -3,8 +3,11 @@ import { INDIAN_ROUTES } from '@/game/config/environmentConfig'
 import { useEffect, useState } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useGameStore } from '@/stores/useGameStore'
+import { clearSavedData } from '@/stores/clearSavedData'
+import { Credits } from './Credits'
 export function SettingsPanel() {
   const [open, setOpen] = useState(false)
+  const [clearError, setClearError] = useState('')
   useEffect(() => { const show = () => { useGameStore.getState().pause(); setOpen(true) }; window.addEventListener('wayfound-open-settings', show); return () => window.removeEventListener('wayfound-open-settings', show) }, [])
   const settings = useSettingsStore()
   const phase = useGameStore(s => s.phase)
@@ -24,6 +27,9 @@ export function SettingsPanel() {
       <label className="flex gap-3"><input type="checkbox" checked={settings.cruise} onChange={e=>settings.setSetting('cruise',e.target.checked)}/> Cruise assist</label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.cycle} onChange={e=>settings.setSetting('cycle',e.target.checked)}/> Automatic day/night cycle</label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.reduceEffects} onChange={e=>settings.setSetting('reduceEffects',e.target.checked)}/> Reduce flashing &amp; vibration</label>
+      <button onClick={() => { if (!window.confirm('Clear saved settings, radio preferences and shopping list on this device?')) return; try { clearSavedData(localStorage); window.location.reload() } catch { setClearError('Could not clear saved data on this device.') } }}>Clear saved data</button>
+      {clearError && <p role="alert">{clearError}</p>}
+      <Credits />
       <p className="text-xs text-slate-400">W / ↑ accelerate · S / ↓ brake/reverse · A/D or ←/→ steer · Space handbrake · C camera · H horn · P radio · Esc pause</p>
     </section>}
   </div>

@@ -11,15 +11,27 @@ export const ROAD_OBSTACLES = [
 
 export function nearestSafeRoadPoint(x, z, traffic = []) {
   if (!Number.isFinite(x) || !Number.isFinite(z)) return null
+  const clamp = v => Math.max(-ROAD_END, Math.min(ROAD_END, v))
+  const distanceToGrid = Math.min(...ROAD_POSITIONS.flatMap(r => [Math.hypot(x-r, z-clamp(z)), Math.hypot(x-clamp(x), z-r)]))
+  // Beyond the grid, find the nearest safe point to the initial spawn instead.
+  if (distanceToGrid > 150) { x = 0; z = -55 }
   let best = null, bestDistance = Infinity
-  // Enumerate the finite road grid, allowing a safe alternative if traffic blocks the nearest point.
-  for (const road of ROAD_POSITIONS) for (let along = -320; along <= 320; along += 5) {
+  const blockers = [...ROAD_OBSTACLES, ...traffic.map(v => ({x:v.x,z:v.z,halfX:v.halfX ?? 4,halfZ:v.halfZ ?? 6}))]
+  for (const road of ROAD_POSITIONS) {
     for (const axis of ['z', 'x']) {
-      const px = axis === 'z' ? road : along, pz = axis === 'z' ? along : road
-      if (ROAD_OBSTACLES.some(o => Math.abs(px-o.x) < o.halfX && Math.abs(pz-o.z) < o.halfZ)) continue
-      if (traffic.some(v => Math.abs(px-v.x) < (v.halfX ?? 4) && Math.abs(pz-v.z) < (v.halfZ ?? 6))) continue
-      const d = (px-x)**2 + (pz-z)**2
-      if (d < bestDistance) { bestDistance = d; best = { x:px, z:pz, heading:axis === 'z' ? 0 : Math.PI/2, speed:0 } }
+      const candidates = [clamp(axis === 'z' ? z : x), -ROAD_END, ROAD_END]
+      for (const o of blockers) {
+        if (axis === 'z' ? Math.abs(road-o.x) < o.halfX : Math.abs(road-o.z) < o.halfZ) {
+          const center = axis === 'z' ? o.z : o.x, half = axis === 'z' ? o.halfZ : o.halfX
+          candidates.push(clamp(center-half), clamp(center+half))
+        }
+      }
+      for (const along of candidates) {
+        const px = axis === 'z' ? road : along, pz = axis === 'z' ? along : road
+        if (blockers.some(o => Math.abs(px-o.x) < o.halfX && Math.abs(pz-o.z) < o.halfZ)) continue
+        const d = (px-x)**2 + (pz-z)**2
+        if (d < bestDistance) { bestDistance = d; best = { x:px, z:pz, heading:axis === 'z' ? 0 : Math.PI/2, speed:0 } }
+      }
     }
   }
   return best

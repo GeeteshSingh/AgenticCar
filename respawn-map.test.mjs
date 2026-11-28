@@ -11,6 +11,8 @@ for (const [x,z] of [[28,4],[0,0],[1e6,-1e6],[-28,164]]) {
   assert.ok(!(Math.abs(p.x)<4 && Math.abs(p.z)<7))
 }
 assert.equal(nearestSafeRoadPoint(NaN,0), null)
+assert.deepEqual(nearestSafeRoadPoint(1e6, -1e6), {x:0,z:-55,heading:0,speed:0})
+assert.deepEqual(nearestSafeRoadPoint(2, -57), {x:0,z:-57,heading:0,speed:0})
 const cooldown = createRespawnCooldown()
 assert.ok(cooldown.ready()); cooldown.activate(); assert.ok(!cooldown.ready())
 cooldown.tick(2.9); assert.ok(!cooldown.ready()); cooldown.tick(.1); assert.ok(cooldown.ready())
