@@ -8,6 +8,7 @@ import { useGameStore } from '@/stores/useGameStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { MenuBackdrop } from '@/ui/menus/MenuBackdrop'
 import './experience.css'
+import { LiveStats } from './LiveStats'
 
 const environments = Object.entries(INDIAN_ROUTES).map(([id, route]) => [id, route.name])
 const modes = [
@@ -35,6 +36,7 @@ export function MainMenu() {
       <section className="drive-menu-intro" aria-labelledby="drive-title">
         <h1 id="drive-title">{brand.tagline}</h1>
         <p>{brand.subtagline} An open road and a moment to yourself. Explore India-inspired routes, tune the radio, and find your own pace.</p>
+        <LiveStats />
       </section>
       <section className="drive-menu-setup" aria-label="Set up your drive">
         <fieldset><legend>Your Indian route</legend><div className="drive-environments">{environments.map(([id, label]) => <button key={id} aria-pressed={environment === id} onClick={() => setSetting('environment', id)}>{label}</button>)}</div><p className="drive-route-description">{INDIAN_ROUTES[environment]?.region} — {INDIAN_ROUTES[environment]?.description}</p></fieldset>

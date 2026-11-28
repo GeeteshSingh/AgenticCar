@@ -343,6 +343,8 @@
 .drive-hud-actions { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
 .drive-hud-mobile-toggle { display:none; }
 .objective-pill { display:none; }
+.live-stats-slot { min-height:28px; }
+.live-stats-pill { display:inline-block; padding:4px 10px; border:1px solid #69877a; border-radius:999px; background:#10241ddd; color:#d7e8d9; font-size:12px; }
 @media (prefers-reduced-motion:reduce) { .objective-card * { transition:none!important; } }
 .drive-hud-menu-route, .drive-hud-mobile-settings { display:none; }
 @media (max-width:640px) {
