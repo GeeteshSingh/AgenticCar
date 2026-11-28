@@ -31,3 +31,24 @@ assert.equal(recordStart(storage, sql, 'hash', 101), false)
 assert.equal(total, 1)
 assert.equal(purgeCutoff, 101 - DEDUPE_MS)
 console.log('Live counter thresholds and formatting passed')
+
+const { handleApi, jsonResponse } = await import('./worker/liveStatsHttp.js')
+let called = 0
+const env = { LIVE_STATS: { idFromName: () => 'global', get: () => ({ fetch: async () => { called++; return jsonResponse({ ok: true }) } }) } }
+const request = (path, options) => new Request('https://example.test' + path, options)
+for (const [req, status] of [
+  [request('/api/stats', { method:'POST' }), 405],
+  [request('/api/hb', { method:'POST', headers:{origin:'https://other.test', 'content-type':'application/json'}, body:'{}' }), 403],
+  [request('/api/hb', { method:'POST', body:'{}' }), 415],
+  [request('/api/hb', { method:'POST', headers:{'content-type':'application/json'}, body:'{' }), 400],
+  [request('/api/hb', { method:'POST', headers:{'content-type':'application/json'}, body:'{}' }), 400],
+  [request('/api/hb', { method:'POST', headers:{'content-type':'application/json'}, body:'x'.repeat(201) }), 413],
+]) {
+  const response = await handleApi(req, env)
+  assert.equal(response.status, status)
+  assert.match(response.headers.get('content-type'), /^application\/json/)
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff')
+  assert.equal(response.headers.get('cache-control'), 'no-store')
+  assert.equal(response.headers.get('access-control-allow-origin'), null)
+}
+assert.equal(called, 0)

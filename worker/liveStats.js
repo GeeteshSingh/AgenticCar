@@ -1,19 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
-import { validSession, createPresence, recordStart, DEDUPE_MS } from './liveStatsLogic.js'
-
-async function readSession(request) {
-  if (Number(request.headers.get('content-length')) > 200 || !request.body) return null
-  const reader = request.body.getReader(); let length = 0; const chunks = []
-  while (true) {
-    const {done,value} = await reader.read(); if (done) break
-    length += value.byteLength
-    if (length > 200) { await reader.cancel(); return null }
-    chunks.push(value)
-  }
-  const bytes = new Uint8Array(length); let offset = 0
-  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length }
-  try { const body = JSON.parse(new TextDecoder().decode(bytes)); return validSession(body?.id) ? body.id : null } catch { return null }
-}
+import { createPresence, recordStart, DEDUPE_MS } from './liveStatsLogic.js'
+import { handleApi, jsonResponse } from './liveStatsHttp.js'
 
 export class LiveStats extends DurableObject {
   constructor(ctx, env) {
@@ -27,18 +14,18 @@ export class LiveStats extends DurableObject {
     const path = new URL(request.url).pathname, now = Date.now()
     if (request.method === 'GET' && path === '/api/stats') {
       const total = this.sql.exec('SELECT total FROM counter WHERE id=1').one().total
-      return Response.json({online:this.presence.count(now), total}, {headers:{'Cache-Control':'public, s-maxage=15'}})
+      return jsonResponse({online:this.presence.count(now), total}, 200, 'public, s-maxage=15')
     }
-    if (request.method !== 'POST' || !['/api/hb','/api/start'].includes(path)) return new Response(null, {status:404})
-    const id = await readSession(request)
-    if (id && path === '/api/hb') this.presence.beat(id, now)
+    if (request.method !== 'POST' || !['/api/hb','/api/start'].includes(path)) return jsonResponse({ error: 'Not found' }, 404)
+    const { id } = await request.json()
+    if (id && path === '/api/hb' && !this.presence.beat(id, now)) return jsonResponse({ error: 'Rate limited' }, 429)
     if (id && path === '/api/start') {
       const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id))
       const hash = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('')
       recordStart(this.storage, this.sql, hash, now)
       if (await this.storage.getAlarm() === null) await this.storage.setAlarm(now + DEDUPE_MS + 1000)
     }
-    return new Response(null, {status:204})
+    return jsonResponse({ ok: true })
   }
   async alarm() {
     const now = Date.now()
@@ -51,7 +38,7 @@ export class LiveStats extends DurableObject {
 export default {
   fetch(request, env) {
     const path = new URL(request.url).pathname
-    if (['/api/hb','/api/start','/api/stats'].includes(path)) return env.LIVE_STATS.get(env.LIVE_STATS.idFromName('global')).fetch(request)
+    if (path.startsWith('/api/')) return handleApi(request, env)
     return env.ASSETS.fetch(request)
   },
 }
