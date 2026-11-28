@@ -48,7 +48,8 @@ export const useGameStore = create((set, get) => ({
 
   setMode: (mode) => set({ mode }),
 
-  startRun: (mode) =>
+  startRun: (mode) => {
+    useSettingsStore.getState().setSetting('vehicle', 0)
     set({
       mode,
       runId: get().runId + 1,
@@ -70,7 +71,8 @@ export const useGameStore = create((set, get) => ({
       roadFinds: [],
   missionComplete: false,
       cameraMode: useSettingsStore.getState().camera,
-    }),
+    })
+  },
 
   beginCountdown: () => set({ phase: GAME_STATES.COUNTDOWN }),
 

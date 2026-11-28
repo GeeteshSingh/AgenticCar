@@ -31,6 +31,20 @@ export function PlayerCar({stateRef}) {
       {[[[0,.4,-l*.34],[0,.55,0]],[[0,.55,0],[0,1,-.3]],[[0,1,-.3],[0,.4,-l*.34]],[[0,.55,0],[0,1,.45]],[[0,1,.45],[0,1,-.3]],[[0,1,.45],[0,.4,l*.34]]].map(([a,b],i)=><Tube key={i} a={a} b={b} color={v.color} r={v.type==='bike'?.08:.035}/>)}
       <Tube a={[-.32,1.15,.45]} b={[.32,1.15,.45]}/><Box size={[.34,.12,.45]} position={[0,1.08,-.3]} color="#252930"/>
       {v.type==='bike'&&<Box size={[.38,.35,.55]} position={[0,.75,0]} color={v.color}/>}
+      {v.type==='cycle' && <group>
+        <Box size={[.58,.62,.48]} position={[0,1.38,-.63]} color="#e96c24"/>
+        <Box size={[.6,.07,.5]} position={[0,1.72,-.63]} color="#ff9a46"/>
+        <Box size={[.4,.05,.015]} position={[0,1.41,-.88]} color="#fff0d8"/>
+      </group>}
+      <group aria-label="Rider">
+        <Box size={[.46,.58,.27]} position={[0,1.45,-.16]} color={v.type==='cycle' ? '#e96c24' : '#314f58'} rotation={[-.28,0,0]}/>
+        <mesh position={[0,1.9,-.04]}><sphereGeometry args={[.19,12,8]}/><meshStandardMaterial color="#d5a481" roughness={.8}/></mesh>
+        <mesh position={[0,1.98,-.04]}><sphereGeometry args={[.2,12,8,0,Math.PI*2,0,Math.PI/2]}/><meshStandardMaterial color="#e5e0ce" roughness={.45}/></mesh>
+        {[-1,1].map(side=><group key={side}>
+          <Tube a={[side*.2,1.65,-.08]} b={[side*.29,1.15,.45]} r={.065} color={v.type==='cycle' ? '#e96c24' : '#314f58'}/>
+          <Tube a={[side*.15,1.2,-.28]} b={[side*.2,.65,.05]} r={.075} color="#26363b"/>
+        </group>)}
+      </group>
     </> : <>
       <Box size={[w,.35,l]} position={[0,.55,0]} color={v.color}/>
       <Box size={[w*.9,.22,l*.94]} position={[0,.32,0]} color="#293039"/>
