@@ -264,10 +264,6 @@
   user-select:none}
 .drive-touch button:active {
   background:#416472}
-@media(any-pointer:coarse) and (not (any-pointer:fine)) {
-  .drive-touch {
-  display:flex}
-}
 @media(max-width:640px) {
   .drive-menu-content {
   padding:22px 22px 24px}
@@ -391,7 +387,7 @@
   .objective-pill { display:block; width:100%; min-height:44px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
   .objective-card.is-collapsed { padding:0 10px; }
   .objective-card.is-collapsed .objective-details { display:none; }
-  .drive-touch { display:flex; left:max(8px,env(safe-area-inset-left)); right:max(8px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); }
+  .drive-touch { left:max(8px,env(safe-area-inset-left)); right:max(8px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); }
   .drive-touch button { width:48px; height:48px; background:rgba(10,24,34,.68); }
   .settings-driving > .utility-button { display:none; }
 }

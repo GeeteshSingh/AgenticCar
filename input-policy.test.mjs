@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
 import { shouldPreventGameKey } from './src/game/input/keyPolicy.js'
+import { shouldShowTouchControls } from './src/game/input/inputMode.js'
+assert.equal(shouldShowTouchControls({coarse:true,fine:false,requested:false}), true)
+assert.equal(shouldShowTouchControls({coarse:true,fine:true,requested:false}), false)
+assert.equal(shouldShowTouchControls({coarse:true,fine:true,requested:true}), true)
 const event = code => ({ code, ctrlKey:false, metaKey:false, altKey:false, isComposing:false })
 for (const code of ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyW','KeyA','KeyS','KeyD','KeyH','KeyC','KeyP','KeyM','KeyR','Digit1','Digit9']) {
   assert.equal(shouldPreventGameKey(event(code), true), true, code)
