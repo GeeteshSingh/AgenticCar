@@ -1,5 +1,6 @@
 import { Cockpit } from '@/game/camera/Cockpit'
 import { useGameStore } from '@/stores/useGameStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useEffect, useRef } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { createChaseCamera } from '@/game/camera/useChaseCamera'
@@ -30,7 +31,7 @@ export function CameraManager({ targetRef, cameraMode, effectsRef }) {
     } else {
       chaseRef.current.update(camera, target, dt)
     }
-    if (useGameStore.getState().phase === 'playing' && !reducedMotion.current) {
+    if (useGameStore.getState().phase === 'playing' && !reducedMotion.current && !useSettingsStore.getState().reduceEffects) {
       const offset = effectsRef?.current.shake.update(Math.min(dt, .05))
       if (offset) { previousShake.current.copy(offset); camera.position.add(offset) }
     }
