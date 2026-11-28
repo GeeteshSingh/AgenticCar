@@ -19,6 +19,7 @@ const _smoothLook = new THREE.Vector3()
 
 export function createChaseCamera() {
   const initialized = { current: false }
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')
   return {
     initialized,
     update(camera, target, dt) {
@@ -51,7 +52,10 @@ export function createChaseCamera() {
       camera.lookAt(_smoothLook)
 
       // Speed-based FOV
-      const fovBonus = (Math.abs(target.speed) / VEHICLE.maxSpeed) * MAX_FOV_BONUS
+      const settings = useSettingsStore.getState()
+      const reduced = settings.reduceEffects || reducedMotion?.matches
+      const factor = settings.quality === 'low' || reduced ? 0 : settings.quality === 'high' ? 1 : .65
+      const fovBonus = Math.min(1, Math.abs(target.speed) / VEHICLE.maxSpeed) * MAX_FOV_BONUS * factor
       camera.fov += (BASE_FOV + fovBonus - camera.fov) * Math.min(1, 3 * dt)
       camera.updateProjectionMatrix()
     },

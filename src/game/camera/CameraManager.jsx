@@ -34,6 +34,11 @@ export function CameraManager({ targetRef, cameraMode, effectsRef }) {
     if (useGameStore.getState().phase === 'playing' && !reducedMotion.current && !useSettingsStore.getState().reduceEffects) {
       const offset = effectsRef?.current.shake.update(Math.min(dt, .05))
       if (offset) { previousShake.current.copy(offset); camera.position.add(offset) }
+      const quality = useSettingsStore.getState().quality
+      const speedStrength = quality === 'low' ? 0 : Math.min(1, Math.max(0, (Math.abs(target.speed) - 90) / 130)) * (quality === 'high' ? .025 : .012)
+      const speedOffset = Math.sin(performance.now() * .023) * speedStrength
+      previousShake.current.y += speedOffset
+      camera.position.y += speedOffset
     }
   })
 

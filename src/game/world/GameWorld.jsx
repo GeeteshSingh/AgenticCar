@@ -13,6 +13,7 @@ import { createCollisionEffects } from '@/game/effects/useCollisionEffects'
 import { emitImpact } from '@/game/audio/impact'
 import { setCollisionFlash } from '@/game/effects/collisionSignal'
 import { ImpactParticles } from '@/game/effects/ImpactParticles'
+import { DustTrail } from '@/game/effects/DustTrail'
 import { createScoringManager } from '@/game/scoring/ScoringManager'
 import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
 import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
@@ -296,6 +297,7 @@ export function GameWorld() {
       {/* Player car + camera both read the same controller state ref */}
       <PlayerCar stateRef={stateRef} />
       <ImpactParticles playerStateRef={stateRef} />
+      <DustTrail playerStateRef={stateRef} />
       <CameraManager targetRef={stateRef} cameraMode={cameraMode} effectsRef={effectsRef} />
 
       {/* HUD overlay is DOM, rendered by AppShell/GameRouter separately */}
