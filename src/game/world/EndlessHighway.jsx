@@ -120,13 +120,13 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
       const hash = (n, m) => ((n % m) + m) % m
       const offset = side * (16 + hash(cell * 37, 60))
       const scale = 0.8 + hash(cell * 13, 10) / 10
-      const visible = (!low || hash(cell, 3) === 0) && !(environment === 'coast' && side > 0) && !(environment === 'desert' && hash(cell, 5) !== 0)
+      const visible = (!low || hash(cell, 3) === 0) && !(environment === 'coast' && side > 0) && !((environment === 'desert' || environment === 'thar_test') && hash(cell, 5) !== 0)
       const y = frame.y + terrainHeight(offset, globalZ, environment)
-      const treeHeight = environment === 'coast' ? 7 : environment === 'desert' ? 1.8 : environment === 'forest' ? 5 : environment === 'kashmir' ? 5.5 : 3.5
+      const treeHeight = environment === 'coast' ? 7 : (environment === 'desert' || environment === 'thar_test') ? 1.8 : environment === 'forest' ? 5 : environment === 'kashmir' ? 5.5 : 3.5
       TEMP.position.set(frame.x + offset, y + scale * treeHeight, z)
       TEMP.rotation.set(0, cell, 0)
-      const crownWidth = environment === 'desert' ? 1.25 : environment === 'coast' ? 1.5 : environment === 'forest' ? 1.8 : 1.4
-      const crownHeight = environment === 'desert' ? 0.45 : environment === 'coast' ? 0.35 : 1.1
+      const crownWidth = (environment === 'desert' || environment === 'thar_test') ? 1.25 : environment === 'coast' ? 1.5 : environment === 'forest' ? 1.8 : 1.4
+      const crownHeight = (environment === 'desert' || environment === 'thar_test') ? 0.45 : environment === 'coast' ? 0.35 : 1.1
       TEMP.scale.set(visible ? scale * crownWidth : 0, visible ? scale * crownHeight : 0, visible ? scale * crownWidth : 0)
       TEMP.updateMatrix(); trees.current.setMatrixAt(i, TEMP.matrix)
       TEMP.position.y = y + scale * treeHeight / 2
@@ -134,7 +134,7 @@ export function EndlessHighway({ scrollRef, distanceRef, settings = {} }) {
       TEMP.updateMatrix(); trunks.current.setMatrixAt(i, TEMP.matrix)
       const rockOffset = side * (48 + hash(cell * 19, 220))
       TEMP.position.set(frame.x + rockOffset, frame.y + terrainHeight(rockOffset, globalZ, environment) - 3, z)
-      TEMP.scale.set(7 + hash(cell, 8), environment === 'forest' ? 12 + hash(cell, 24) : environment === 'desert' ? 1 + hash(cell, 3) : 4 + hash(cell, 5), 8 + hash(cell, 5))
+      TEMP.scale.set(7 + hash(cell, 8), environment === 'forest' ? 12 + hash(cell, 24) : (environment === 'desert' || environment === 'thar_test') ? 1 + hash(cell, 3) : 4 + hash(cell, 5), 8 + hash(cell, 5))
       TEMP.updateMatrix(); rocks.current.setMatrixAt(i, TEMP.matrix)
     }
     trees.current.instanceMatrix.needsUpdate = true

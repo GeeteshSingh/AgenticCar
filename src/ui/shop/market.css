@@ -1,0 +1,15 @@
+.market-overlay { position:fixed; inset:0; z-index:60; display:grid; place-items:center; padding:16px; background:#07120edb; color:#f5f4e9; pointer-events:auto; }
+.market-sheet { width:min(520px,100%); max-height:calc(100dvh - 32px); overflow:auto; border:1px solid #6d8873; border-radius:16px; background:#19332a; box-shadow:0 18px 55px #0009; padding:clamp(20px,4vw,32px); }
+.market-sheet header,.market-sheet footer { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.market-sheet h2 { font-size:28px; font-weight:700; }
+.market-sheet p,.market-sheet small { color:#c8d9c8; }
+.market-sheet header p,.market-sheet small { font-size:13px; }
+.market-note { margin:18px 0; font-size:13px; line-height:1.5; }
+.market-sheet ul { list-style:none; padding:0; margin:0; }
+.market-sheet li { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 0; border-top:1px solid #4c695a; }
+.market-sheet li small { display:block; margin-top:3px; }
+.market-quantity { display:flex; align-items:center; gap:12px; }
+.market-sheet button { min-width:40px; min-height:40px; padding:8px 12px; background:#d4e8d3; color:#183126; border-radius:8px; }
+.market-sheet button:disabled { opacity:.45; }
+.market-sheet button:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+.market-sheet footer { border-top:1px solid #4c695a; padding-top:18px; margin-top:6px; }

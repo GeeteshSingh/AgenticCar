@@ -1,5 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { FreeRoamWorld } from '@/game/world/FreeRoamWorld'
 import { GraphicsStats } from '@/game/GraphicsStats'
 import { GameWorld } from '@/game/world/GameWorld'
 
@@ -9,6 +10,7 @@ import { GameWorld } from '@/game/world/GameWorld'
 export function GameCanvas() {
   const showStats = import.meta.env.DEV && new URLSearchParams(window.location.search).has('stats')
   const quality = useSettingsStore(s => s.quality)
+  const environment = useSettingsStore(s => s.environment)
   return (
     <Canvas
       onCreated={({ gl }) => { gl.domElement.tabIndex = 0; gl.domElement.setAttribute('aria-label', 'Driving view') }}
@@ -19,7 +21,7 @@ export function GameCanvas() {
     >
       <color attach="background" args={['#7db8f0']} />
       <fog attach="fog" args={['#bcd4ec', 220, 640]} />
-      <GameWorld />
+      {environment === 'thar_test' ? <FreeRoamWorld /> : <GameWorld />}
       {showStats && <GraphicsStats />}
     </Canvas>
   )
