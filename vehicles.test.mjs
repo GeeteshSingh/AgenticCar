@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import {PLAYER_VEHICLES,vehicleKey,playerVehicle,createVehicleKeySelector} from './src/game/config/playerVehicles.js'
 assert.equal(PLAYER_VEHICLES.length,10)
+assert.equal(PLAYER_VEHICLES[0].name, 'Desert SUV')
+assert.equal(PLAYER_VEHICLES[9].name, 'Supercar')
 for(let i=0;i<9;i++) {
  assert.equal(vehicleKey(`Digit${i+1}`),i)
  assert.equal(vehicleKey(`Numpad${i+1}`),i)

@@ -53,7 +53,7 @@ See [Architecture](docs/ARCHITECTURE.md), [Testing](docs/TESTING.md), [Project s
 
 Troubleshooting: run `npm ci` if Vite/Oxlint is missing; use a supported Node version; try low graphics quality if rendering is slow; choose another HTTPS MP3 station after a playback error. Storage-disabled browsers keep settings only for the current session and display a notice. Fullscreen WebGL requires hardware/browser support.
 
-Vehicle keys: 1 Thar-inspired SUV, 2 truck, 3 bicycle, 4 hatchback, 5 sedan, 6 auto rickshaw, 7 motorcycle, 8 bus, 9 pickup. Original procedural designs; no manufacturer models or logos. Speed limits and collision dimensions follow the selected vehicle.
+Vehicle keys: 1 Desert SUV, 2 truck, 3 bicycle, 4 hatchback, 5 sedan, 6 auto rickshaw, 7 motorcycle, 8 bus, 9 pickup. Original procedural designs; no manufacturer models or logos. Speed limits and collision dimensions follow the selected vehicle.
 
 Collision feedback includes a synthesized impact sound (controlled by engine volume), red vignette and camera shake; reduced-motion preference suppresses shake. The results overlay keeps the stopped scene visible. Use **C** or the HUD View button to cycle chase, hood and a stylized right-hand-drive cockpit; bicycles and motorcycles use handlebars. The HUD Vehicles button opens the 1–9 selection shortcuts.
 
