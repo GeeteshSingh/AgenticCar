@@ -1,5 +1,6 @@
 export const ROAD_POSITIONS = [-320, -160, 0, 160, 320]
 export const ROAD_END = 326
+export const mapPlayer = { x:0, z:-55, heading:0 }
 // Buildings include their roof overhangs, expanded by the player's safety margin.
 export const ROAD_OBSTACLES = [
   { x: 28, z: 4, halfX: 7, halfZ: 6 },

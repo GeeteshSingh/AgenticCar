@@ -9,7 +9,7 @@ import { PlayerCar } from '@/game/player/PlayerCar'
 import { Atmosphere } from '@/game/environment/Environment'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { stepFreeRoam, nearbyFreeRoamPlace } from './freeRoamMotion'
-import { ROAD_POSITIONS, nearestSafeRoadPoint } from './roadGrid'
+import { ROAD_POSITIONS, nearestSafeRoadPoint, mapPlayer } from './roadGrid'
 
 
 const look = new THREE.Vector3(), cameraPosition = new THREE.Vector3()
@@ -75,6 +75,7 @@ export function FreeRoamWorld() {
     const previous = motion.current
     const current = stepFreeRoam(previous, actionsRef.current, dt, useSettingsStore.getState().vehicle)
     motion.current = current
+    Object.assign(mapPlayer, { x:current.x, z:current.z, heading:current.heading })
     const offRoad = !ROAD_POSITIONS.some(p => Math.abs(current.x-p) < 6 || Math.abs(current.z-p) < 6)
     stuck.current = actionsRef.current.accelerate && Math.abs(current.speed) < 2 ? stuck.current + Math.min(dt,.05) : 0
     const hint = stuck.current >= 4 || offRoad
