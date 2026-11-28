@@ -60,3 +60,9 @@ Collision feedback includes a synthesized impact sound (controlled by engine vol
 ## Deploy
 
 For Cloudflare Pages, set the build command to `npm run build`, the output directory to `dist`, and the environment variable `NODE_VERSION` to `22`.
+
+### Checking Content Security Policy reports
+
+The Cloudflare deployment applies `public/_headers`; `npm run preview` does not reproduce those hosting headers. On the deployed site, open Chrome DevTools → Console, reload, then test each route, WebAssembly physics, radio search and playback, station artwork, fonts, and the free-roam shop. Look for `Content Security Policy` report-only messages and record the blocked URL and directive. Test any supported third-party streams before tightening the policy.
+
+Only after investigation and browser testing show that legitimate resources work, change `Content-Security-Policy-Report-Only:` to `Content-Security-Policy:` in `public/_headers`, deploy, and repeat the checks. Report-only messages do not block resources; enforcement does.
