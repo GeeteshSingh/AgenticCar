@@ -9,7 +9,7 @@ import { PlayerCar } from '@/game/player/PlayerCar'
 import { Atmosphere } from '@/game/environment/Environment'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { stepFreeRoam, nearbyFreeRoamPlace } from './freeRoamMotion'
-import { ROAD_POSITIONS, nearestSafeRoadPoint, mapPlayer } from './roadGrid'
+import { ROAD_POSITIONS, nearestSafeRoadPoint, mapPlayer, createRespawnCooldown } from './roadGrid'
 
 
 const look = new THREE.Vector3(), cameraPosition = new THREE.Vector3()
@@ -19,7 +19,7 @@ export function FreeRoamWorld() {
   const settings = useSettingsStore()
   const { actionsRef, consumeEdgeActions } = useKeyboardInput({ enabled: phase === 'playing' || phase === 'paused' })
   const motion = useRef({x: 0, z: -55, heading: 0, speed: 0})
-  const trafficTime = useRef(0), cooldown = useRef(0), stuck = useRef(0)
+  const trafficTime = useRef(0), cooldown = useRef(createRespawnCooldown()), stuck = useRef(0)
   const car = useRef(), carVisual = useRef({lateralX:0,yaw:0,bodyPitch:0,bodyRoll:0})
   const sign = useMemo(() => {
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 96
@@ -57,10 +57,10 @@ export function FreeRoamWorld() {
   useEffect(() => () => useGameStore.setState({ nearbyPlace: '' }), [])
   useEffect(() => {
     const respawn = () => {
-      if (useGameStore.getState().phase !== 'playing' || cooldown.current > 0) return
+      if (useGameStore.getState().phase !== 'playing' || !cooldown.current.ready()) return
       const safe = nearestSafeRoadPoint(motion.current.x, motion.current.z, trafficAtTime(trafficTime.current))
       if (!safe) return
-      motion.current = safe; cooldown.current = 3; stuck.current = 0
+      motion.current = safe; cooldown.current.activate(); stuck.current = 0
       useGameStore.setState({ stuckHint:false, respawnFade:Date.now() })
     }
     window.addEventListener('wayfound-respawn', respawn)
@@ -71,7 +71,7 @@ export function FreeRoamWorld() {
       if (action === 'togglePause') useGameStore.getState().togglePause()
     }
     if (useGameStore.getState().phase !== 'playing') return
-    cooldown.current = Math.max(0, cooldown.current - Math.min(dt, .05))
+    cooldown.current.tick(Math.min(dt, .05))
     const previous = motion.current
     const current = stepFreeRoam(previous, actionsRef.current, dt, useSettingsStore.getState().vehicle)
     motion.current = current

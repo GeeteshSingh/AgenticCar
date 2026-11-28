@@ -28,3 +28,8 @@ export function nearestSafeRoadPoint(x, z, traffic = []) {
 export function mapPoint(x, z, size = 1000) {
   return { x:(x / (ROAD_END * 2) + .5) * size, y:(.5 - z / (ROAD_END * 2)) * size }
 }
+
+export function createRespawnCooldown() {
+  let remaining = 0
+  return { ready: () => remaining <= 1e-9, activate: () => { remaining = 3 }, tick: dt => { remaining = Math.max(0, remaining - Math.max(0, dt)) } }
+}
