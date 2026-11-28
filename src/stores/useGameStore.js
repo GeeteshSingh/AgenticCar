@@ -65,6 +65,7 @@ export const useGameStore = create((set, get) => ({
       collisions: 0,
       topSpeed: 0,
       activeObjective: null,
+      stuckHint: false,
       objectiveCompleted: 0,
       objectiveTotal: 0,
       resultReason: '',

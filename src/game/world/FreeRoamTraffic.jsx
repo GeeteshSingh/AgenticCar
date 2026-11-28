@@ -19,7 +19,7 @@ export function trafficAtTime(time) {
   return VEHICLES.map(v => {
     const p = ((v.start + v.direction * v.speed * time + SPAN / 2) % SPAN + SPAN) % SPAN - SPAN / 2
     const lane = v.road + (v.direction > 0 ? 2 : -2)
-    return v.axis === 'z' ? { x:lane, z:p, halfX:4, halfZ:7 } : { x:p, z:lane, halfX:7, halfZ:4 }
+    return v.axis === 'z' ? { x:lane, z:p, halfX:5, halfZ:10 } : { x:p, z:lane, halfX:10, halfZ:5 }
   })
 }
 export function FreeRoamTraffic({ timeRef }) {
