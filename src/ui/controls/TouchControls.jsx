@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, CircleParking } from 'lucide-react'
 import '../menus/experience.css'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 // Pointer capture guarantees release when a finger leaves its control.
 export function TouchControls() {
+  const show = useSettingsStore(s => s.showTouchControls)
   const held = useRef(new Map())
   const send = (type, code) => window.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }))
   const release = pointerId => {
@@ -23,5 +25,5 @@ export function TouchControls() {
     event.currentTarget.setPointerCapture(event.pointerId)
     held.current.set(event.pointerId, code); send('keydown', code)
   }} onPointerUp={event => release(event.pointerId)} onPointerCancel={event => release(event.pointerId)} onLostPointerCapture={event => release(event.pointerId)}><Icon aria-hidden="true" size={22} /></button>
-  return <div className="drive-touch" aria-label="Touch driving controls"><div className="drive-touch-group">{control('KeyA', 'Steer left', ArrowLeft)}{control('KeyD', 'Steer right', ArrowRight)}</div><div className="drive-touch-group">{control('Space', 'Handbrake', CircleParking)}{control('KeyS', 'Brake and reverse', ArrowDown)}{control('KeyW', 'Accelerate', ArrowUp)}</div></div>
+  return <div className={`drive-touch ${show ? 'is-requested' : ''}`} aria-label="Touch driving controls"><div className="drive-touch-group">{control('KeyA', 'Steer left', ArrowLeft)}{control('KeyD', 'Steer right', ArrowRight)}</div><div className="drive-touch-group">{control('Space', 'Handbrake', CircleParking)}{control('KeyS', 'Brake and reverse', ArrowDown)}{control('KeyW', 'Accelerate', ArrowUp)}</div></div>
 }

@@ -264,7 +264,7 @@
   user-select:none}
 .drive-touch button:active {
   background:#416472}
-@media(pointer:coarse) {
+@media(any-pointer:coarse) and (not (any-pointer:fine)) {
   .drive-touch {
   display:flex}
 }
@@ -363,7 +363,7 @@
   .vehicle-shortcuts { top:105px; right:12px; }
 }
 
-@media (pointer:coarse), (max-width:640px) {
+@media (any-pointer:coarse) and (not (any-pointer:fine)), (max-width:640px) {
   .drive-hud { padding:0; }
   .drive-hud-context { position:absolute; top:max(8px,env(safe-area-inset-top)); left:max(8px,env(safe-area-inset-left)); padding:0; background:transparent; border:0; }
   .drive-hud-route, .keyboard-hint { display:none; }
@@ -390,3 +390,5 @@
   .drive-touch button { width:48px; height:48px; background:rgba(10,24,34,.68); }
   .settings-driving > .utility-button { display:none; }
 }
+.drive-touch.is-requested { display:flex; }
+@media (any-pointer:fine) { .keyboard-hint { display:inline; } }

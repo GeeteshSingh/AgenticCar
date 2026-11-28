@@ -24,6 +24,7 @@ export function SettingsPanel() {
       <label className="flex gap-3"><input type="checkbox" checked={settings.cruise} onChange={e=>settings.setSetting('cruise',e.target.checked)}/> Cruise assist</label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.cycle} onChange={e=>settings.setSetting('cycle',e.target.checked)}/> Automatic day/night cycle</label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.reduceEffects} onChange={e=>settings.setSetting('reduceEffects',e.target.checked)}/> Reduce flashing &amp; vibration</label>
+      <label className="flex gap-3"><input type="checkbox" checked={settings.showTouchControls} onChange={e=>settings.setSetting('showTouchControls',e.target.checked)}/> Show touch controls</label>
       <p className="text-xs text-slate-400">W / ↑ accelerate · S / ↓ brake/reverse · A/D or ←/→ steer · Space handbrake · C camera · H horn · P radio · Esc pause</p>
     </section>}
   </div>

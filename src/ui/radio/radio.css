@@ -21,7 +21,7 @@
   .radio-root-driving .radio-toggle { max-width:115px; min-height:40px; padding:8px 10px; }
   .radio-root-driving .radio-panel { top:48px; bottom:auto; max-height:calc(100dvh - 125px); }
 }
-@media (pointer:coarse), (max-width:640px) {
+@media (any-pointer:coarse) and (not (any-pointer:fine)), (max-width:640px) {
   .radio-root-driving { top:max(8px,env(safe-area-inset-top)); bottom:auto; right:calc(max(8px,env(safe-area-inset-right)) + 100px); }
   .radio-root-driving .radio-toggle { min-width:48px; min-height:48px; padding:8px; }
   .radio-root-driving .radio-toggle-label { display:none; }
