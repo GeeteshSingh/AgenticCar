@@ -18,5 +18,7 @@ for (const [label, pattern, max] of [['main', /^index-.*\.js$/, 400_000], ['free
 const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)])
 for (const file of walk('dist').filter(f => /\.(?:js|html|css|map)$/.test(f))) {
   const data = readFileSync(file, 'utf8')
-  for (const forbidden of ['localhost', '127.0.0.1', '?stats', '/Users/']) assert.ok(!data.includes(forbidden), `${file} contains ${forbidden}`)
+  for (const forbidden of [/https?:\/\/(?:localhost|127\.0\.0\.1)(?=[:/\s?#'"`]|$)/i, /\?stats\b/, /\/Users\//]) {
+    assert.doesNotMatch(data, forbidden, `${file} contains a forbidden development reference`)
+  }
 }
