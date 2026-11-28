@@ -17,3 +17,20 @@ Record commit/build: __________  Date: __________  Tester: __________
 8. [ ] **QA-08 Settings:** Change sound, quality, day/night and reduced motion; reload. Expected: selected values persist and apply.
 9. [ ] **QA-09 Lifecycle:** Pause and resume, change tabs, blur the window, then drive for 15 minutes while observing memory. Expected: input clears on blur, state remains coherent and memory does not grow continuously.
 10. [ ] **QA-10 Security:** On the deployed preview run `curl -sI <preview-url>` and inspect the headers; search the browser console for `violates Content Security Policy` while using every feature. Expected: configured headers are present; record violations and affected feature.
+
+### Live counter: Cloudflare preview API
+
+Use a preview environment: these requests create a real preview session and increment its counter once if you also call `/api/start`. Replace the URL before running. The `-I` request uses HEAD, so it should return 405 with JSON headers; use the GET below to inspect the cached response headers and body.
+
+```sh
+preview_url='https://YOUR-PREVIEW-URL'
+session_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+curl -sI "$preview_url/api/stats"
+curl -sD - "$preview_url/api/stats"
+curl -si -X POST "$preview_url/api/hb" -H 'Content-Type: application/json' -d "{\"id\":\"$session_id\"}"
+curl -si -X POST "$preview_url/api/hb" -H 'Content-Type: application/json' -d '{'
+python3 -c 'print("x" * 201)' | curl -si -X POST "$preview_url/api/hb" -H 'Content-Type: application/json' --data-binary @-
+for i in $(seq 1 30); do curl -s -o /dev/null -w '%{http_code}\n' -X POST "$preview_url/api/hb" -H 'Content-Type: application/json' -d "{\"id\":\"$session_id\"}"; done
+```
+
+Expect 400 for malformed JSON, 413 for the oversized body, and 429 for throttled heartbeats. The burst uses the same session as the prior heartbeat, so all requests may be throttled. Inspect GET for `public, s-maxage=15`, `application/json`, and `nosniff`; POST responses use `no-store`. No CORS header should be present. Check that the counter disappears if the API returns 404, verify mobile layout and reduced motion, and confirm two separate browser sessions are reflected before merging.
