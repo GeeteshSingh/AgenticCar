@@ -1,14 +1,16 @@
 import { PLAYER_VEHICLES } from '@/game/config/playerVehicles'
 import { INDIAN_ROUTES } from '@/game/config/environmentConfig'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useGameStore } from '@/stores/useGameStore'
 export function SettingsPanel() {
   const [open, setOpen] = useState(false)
+  useEffect(() => { const show = () => { useGameStore.getState().pause(); setOpen(true) }; window.addEventListener('wayfound-open-settings', show); return () => window.removeEventListener('wayfound-open-settings', show) }, [])
   const settings = useSettingsStore()
+  const phase = useGameStore(s => s.phase)
   const close = () => { setOpen(false); document.querySelector('canvas')?.focus() }
   function toggle() { if (open) close(); else { useGameStore.getState().pause(); setOpen(true) } }
-  return <div className="fixed right-4 top-4 z-40">
+  return <div className={`fixed right-4 top-4 z-40 ${['playing', 'paused'].includes(phase) ? 'settings-driving' : ''}`}>
     <button className="utility-button" onClick={toggle} aria-expanded={open}>Settings</button>
     {open && <section onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape')close()}} className="utility-panel" aria-label="Driving settings">
       <div className="flex justify-between items-center"><h2 className="text-xl font-semibold">Your drive</h2><button onClick={close} aria-label="Close settings">✕</button></div>
