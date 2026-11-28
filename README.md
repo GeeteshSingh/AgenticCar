@@ -63,6 +63,6 @@ For Cloudflare Pages, set the build command to `npm run build`, the output direc
 
 ### Checking Content Security Policy reports
 
-The Cloudflare deployment applies `public/_headers`; `npm run preview` does not reproduce those hosting headers. On the deployed site, open Chrome DevTools → Console, reload, then test each route, WebAssembly physics, radio search and playback, station artwork, fonts, and the free-roam shop. Look for `Content Security Policy` report-only messages and record the blocked URL and directive. Test any supported third-party streams before tightening the policy.
+The Cloudflare deployment applies `public/_headers`; `npm run preview` does not reproduce those hosting headers. On the deployed site, open Chrome DevTools → Console, reload, then test each route, WebAssembly physics, radio search and playback, station artwork, fonts, and the free-roam shop. Look for `Content Security Policy` violations and record the blocked URL and directive. Test any supported third-party streams before tightening the policy.
 
-Only after investigation and browser testing show that legitimate resources work, change `Content-Security-Policy-Report-Only:` to `Content-Security-Policy:` in `public/_headers`, deploy, and repeat the checks. Report-only messages do not block resources; enforcement does.
+This branch uses enforcing `Content-Security-Policy:` with the same policy text as the report-only configuration. Do not merge it until the deployed preview has been checked in a live browser using every feature above. Enforcement blocks disallowed resources; passing unit tests or a local Vite preview does not verify browser compatibility.

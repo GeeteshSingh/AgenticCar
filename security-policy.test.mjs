@@ -6,8 +6,9 @@ import { join } from 'node:path'
 test('static hosting headers retain the expected security policies', () => {
   const headers = readFileSync('public/_headers', 'utf8')
   for (const line of ['X-Content-Type-Options: nosniff', 'Referrer-Policy:', 'X-Frame-Options: DENY', 'Cross-Origin-Opener-Policy: same-origin', 'geolocation=(self)', 'camera=()', 'microphone=()', 'payment=()']) assert.ok(headers.includes(line), line)
-  const policy = headers.match(/^\s*Content-Security-Policy-Report-Only:\s*(.+)$/mi)?.[1]
+  const policy = headers.match(/^\s*Content-Security-Policy:\s*(.+)$/mi)?.[1]
   assert.ok(policy)
+  assert.doesNotMatch(headers, /Content-Security-Policy-Report-Only:/i)
   for (const directive of ["object-src 'none'", "base-uri 'self'", "frame-ancestors 'none'", "'wasm-unsafe-eval'"]) assert.ok(policy.includes(directive), directive)
   const script = policy.split(';').find(d => d.trim().startsWith('script-src '))
   assert.ok(script)
