@@ -45,7 +45,6 @@ export function MainMenu() {
         <p className="drive-menu-hint">WASD or arrows to drive · C camera · Esc pause</p>
       </section>
       {about && <section className="drive-about" aria-label={`About ${brand.name}`}><h2>Made for the road</h2><p>{brand.name} is an endless driving game built with React and Three.js. Routes are original procedural interpretations of Indian regions, not geographic replicas. Landscapes are generated in the browser; live radio comes from Radio Browser. Open Settings to adjust your drive, graphics, and sound.</p></section>}
-      <footer className="drive-menu-footer"><span>Highway Objective</span><span>Choose a view. Enjoy the journey.</span></footer>
     </div>
   </main>
 }

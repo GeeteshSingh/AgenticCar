@@ -24,6 +24,7 @@ test('vehicle profiles have unique types, speeds, and effective tuning', () => {
 test('routes and brand provide required data', () => {
   for (const route of Object.values(INDIAN_ROUTES)) for (const key of ['name', 'region', 'description', 'weather', 'time']) assert.ok(route[key])
   for (const id of ['kashmir', 'desert', 'thar_test']) assert.ok(INDIAN_ROUTES[id])
+  assert.equal(INDIAN_ROUTES.thar_test.name, 'Thar Free Roam (beta)')
   assert.equal(routeName('not-a-route'), 'Indian highway')
   for (const key of ['name', 'slug', 'tagline', 'description']) assert.ok(brand[key])
   assert.match(brand.slug, /^[a-z0-9-]+$/)
