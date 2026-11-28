@@ -76,3 +76,7 @@ Only after investigation and browser testing show that legitimate resources work
 The counter is enabled by default. In Cloudflare Workers & Pages, open the WayFound Worker, choose Settings → Variables and Secrets, and set `LIVE_STATS_ENABLED` to the text `false` for the relevant environment. Apply the configuration change in Cloudflare; whether the dashboard creates a new Worker version or requires deployment depends on Cloudflare's current workflow. The game hides the counter on a 404. Set it to `true` or remove it to re-enable. Check production and preview settings separately.
 
 To remove the Durable Object permanently in a future deployment, first remove the API code and both `LIVE_STATS` bindings, then append a new migration such as `{ "tag": "v2", "deleted_classes": ["LiveStats"] }` to `migrations`. Deleting the class deletes its stored data; verify Cloudflare's migration instructions and retain the existing migration history before deploying.
+
+### Distribution asset check
+
+Run `npm run check:dist` after building. Only `logo.svg` and `og.png` are permitted under `dist/brand`; review any unexpected files in `public/brand` and move files you do not intend to publish outside `public/` before building again. Keep originals and obtain permission before moving someone else's uploads. The check also limits the main JavaScript bundle to 375 kB gzip.
