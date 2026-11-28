@@ -50,7 +50,8 @@ export function DrivingAudio() {
         const settings = useSettingsStore.getState()
         const volume = phase === 'playing' ? useSettingsStore.getState().engineVolume : 0
         const speed = Math.abs(speedKmh)
-        const mix = engineMix(speed, settings.engineVolume, phase, playerVehicle(settings.vehicle).type)
+        const vehicle = playerVehicle(settings.vehicle)
+        const mix = engineMix(speed, settings.engineVolume, phase, vehicle.type, vehicle.topSpeedKmh)
         const profile = soundProfile(playerVehicle(settings.vehicle).type)
         engine.frequency.setTargetAtTime(mix.frequency || 80, context.currentTime, .12)
         exhaust.frequency.setTargetAtTime((mix.frequency || 80) / 2, context.currentTime, .12)

@@ -1,3 +1,5 @@
+import { playerVehicle } from '../config/playerVehicles.js'
+
 export const FREE_ROAM_LIMIT = 760
 export const FREE_ROAM_PLACES = [
   { name: 'Chai stop', x: 28, z: 4 },
@@ -10,14 +12,15 @@ export function nearbyFreeRoamPlace(x, z, speed) {
 }
 
 // Small arcade free-roam simulation, independent from the endless highway.
-export function stepFreeRoam(state, input, dt) {
+export function stepFreeRoam(state, input, dt, vehicleIndex = 0) {
   const step = Math.max(0, Math.min(.05, dt))
   const throttle = input.accelerate > 0, brake = input.brake > 0
   let speed = state.speed
-  if (throttle) speed += 28 * step
-  else if (brake) speed -= (speed > 1 ? 55 : 20) * step
+  const vehicle = playerVehicle(vehicleIndex)
+  if (throttle) speed += (vehicle.freeAcceleration ?? 28) * step
+  else if (brake) speed -= (speed > 1 ? 55 + speed * .15 : 20) * step
   else speed *= Math.exp(-1.2 * step)
-  speed = Math.max(-18, Math.min(90, speed))
+  speed = Math.max(-18, Math.min(vehicle.topSpeedKmh, speed))
   if (Math.abs(speed) < .12 && !throttle && !brake) speed = 0
   const steer = Math.max(-1, Math.min(1, input.steer || 0))
   const heading = state.heading - steer * Math.min(Math.abs(speed) / 12, 1) * Math.sign(speed) * 1.15 * step

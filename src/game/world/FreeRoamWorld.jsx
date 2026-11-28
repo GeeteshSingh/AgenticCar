@@ -60,7 +60,7 @@ export function FreeRoamWorld() {
     }
     if (useGameStore.getState().phase !== 'playing') return
     const previous = motion.current
-    const current = stepFreeRoam(previous, actionsRef.current, dt)
+    const current = stepFreeRoam(previous, actionsRef.current, dt, useSettingsStore.getState().vehicle)
     motion.current = current
     total.current += Math.hypot(current.x - previous.x, current.z - previous.z)
     if (car.current) car.current.position.set(current.x, 0, current.z)

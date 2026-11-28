@@ -19,3 +19,5 @@ console.log('Engine audibility, pause/mute, bicycle and bounded spatial traffic 
 const types = ['suv','truck','cycle','hatch','sedan','auto','bike','bus','pickup']
 assert.equal(new Set(types.map(type => soundProfile(type).horn.join(','))).size, 9)
 assert.equal(new Set(types.filter(type => type !== 'cycle').map(type => engineMix(60, 1, 'playing', type).frequency)).size, 8)
+assert.equal(engineMix(75, 1, 'playing', 'suv', 150).frequency, engineMix(50, 1, 'playing', 'suv', 100).frequency, 'audio follows relative speed')
+assert.equal(engineMix(999, 1, 'playing', 'suv', 150).frequency, engineMix(150, 1, 'playing', 'suv', 150).frequency, 'audio progress is capped')
