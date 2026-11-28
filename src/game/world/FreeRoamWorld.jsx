@@ -4,13 +4,13 @@ import * as THREE from 'three'
 import { useKeyboardInput } from '@/game/input/useKeyboardInput'
 import { useGameStore } from '@/stores/useGameStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { FreeRoamTraffic } from './FreeRoamTraffic'
+import { FreeRoamTraffic, trafficAtTime } from './FreeRoamTraffic'
 import { PlayerCar } from '@/game/player/PlayerCar'
 import { Atmosphere } from '@/game/environment/Environment'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { stepFreeRoam, nearbyFreeRoamPlace } from './freeRoamMotion'
+import { ROAD_POSITIONS, nearestSafeRoadPoint } from './roadGrid'
 
-const ROAD_POSITIONS = [-320, -160, 0, 160, 320]
 
 const look = new THREE.Vector3(), cameraPosition = new THREE.Vector3()
 
@@ -19,6 +19,7 @@ export function FreeRoamWorld() {
   const settings = useSettingsStore()
   const { actionsRef, consumeEdgeActions } = useKeyboardInput({ enabled: phase === 'playing' || phase === 'paused' })
   const motion = useRef({x: 0, z: -55, heading: 0, speed: 0})
+  const trafficTime = useRef(0), cooldown = useRef(0), stuck = useRef(0)
   const car = useRef(), carVisual = useRef({lateralX:0,yaw:0,bodyPitch:0,bodyRoll:0})
   const sign = useMemo(() => {
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 96
@@ -54,14 +55,30 @@ export function FreeRoamWorld() {
   useEffect(() => () => roads.dispose(), [roads])
   const elapsed = useRef(0), total = useRef(0), lastNearby = useRef('')
   useEffect(() => () => useGameStore.setState({ nearbyPlace: '' }), [])
+  useEffect(() => {
+    const respawn = () => {
+      if (useGameStore.getState().phase !== 'playing' || cooldown.current > 0) return
+      const safe = nearestSafeRoadPoint(motion.current.x, motion.current.z, trafficAtTime(trafficTime.current))
+      if (!safe) return
+      motion.current = safe; cooldown.current = 3; stuck.current = 0
+      useGameStore.setState({ stuckHint:false, respawnFade:Date.now() })
+    }
+    window.addEventListener('wayfound-respawn', respawn)
+    return () => window.removeEventListener('wayfound-respawn', respawn)
+  }, [])
   useFrame(({camera}, dt) => {
     for (const action of consumeEdgeActions()) {
       if (action === 'togglePause') useGameStore.getState().togglePause()
     }
     if (useGameStore.getState().phase !== 'playing') return
+    cooldown.current = Math.max(0, cooldown.current - Math.min(dt, .05))
     const previous = motion.current
     const current = stepFreeRoam(previous, actionsRef.current, dt, useSettingsStore.getState().vehicle)
     motion.current = current
+    const offRoad = !ROAD_POSITIONS.some(p => Math.abs(current.x-p) < 6 || Math.abs(current.z-p) < 6)
+    stuck.current = actionsRef.current.accelerate && Math.abs(current.speed) < 2 ? stuck.current + Math.min(dt,.05) : 0
+    const hint = stuck.current >= 4 || offRoad
+    if (useGameStore.getState().stuckHint !== hint) useGameStore.setState({ stuckHint:hint })
     total.current += Math.hypot(current.x - previous.x, current.z - previous.z)
     if (car.current) car.current.position.set(current.x, 0, current.z)
     carVisual.current.yaw = current.heading
@@ -104,7 +121,7 @@ export function FreeRoamWorld() {
       <mesh position={[0,1.8,-3.04]}><boxGeometry args={[3,2.5,.1]}/><meshStandardMaterial color="#6c4430"/></mesh>
       <mesh position={[0,3.2,-3.12]}><boxGeometry args={[6,.6,.12]}/><meshBasicMaterial map={sign}/></mesh>
     </group>
-    <FreeRoamTraffic />
+    <FreeRoamTraffic timeRef={trafficTime} />
     <group ref={car}><PlayerCar stateRef={carVisual}/></group>
   </group>
 }

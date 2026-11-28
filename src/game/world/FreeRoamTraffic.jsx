@@ -15,11 +15,19 @@ const VEHICLES = [
   {axis:'x', road:-160, direction:-1, start:-220, speed:12, color:'#6c7883'},
 ]
 const SPAN = 640
-export function FreeRoamTraffic() {
+export function trafficAtTime(time) {
+  return VEHICLES.map(v => {
+    const p = ((v.start + v.direction * v.speed * time + SPAN / 2) % SPAN + SPAN) % SPAN - SPAN / 2
+    const lane = v.road + (v.direction > 0 ? 2 : -2)
+    return v.axis === 'z' ? { x:lane, z:p, halfX:4, halfZ:7 } : { x:p, z:lane, halfX:7, halfZ:4 }
+  })
+}
+export function FreeRoamTraffic({ timeRef }) {
   const refs = useRef([]), time = useRef(0)
   useFrame((_, delta) => {
     if (useGameStore.getState().phase !== 'playing') return
     time.current += Math.min(delta, .05)
+    if (timeRef) timeRef.current = time.current
     VEHICLES.forEach((vehicle, i) => {
       const group = refs.current[i]
       if (!group) return

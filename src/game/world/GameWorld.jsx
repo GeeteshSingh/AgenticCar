@@ -52,6 +52,21 @@ export function GameWorld() {
   const nearMissDetRef = useRef(createNearMissDetector())
   const eventBusRef = useRef(createEventBus())
   const trafficVehiclesRef = useRef([])
+  const respawnCooldown = useRef(0), stuckTime = useRef(0)
+  useEffect(() => {
+    const respawn = () => {
+      if (useGameStore.getState().phase !== 'playing' || respawnCooldown.current > 0) return
+      const traffic = trafficVehiclesRef.current
+      const candidates = [2, -2, 6, -6].sort((a, b) => Math.abs(a-stateRef.current.lateralX)-Math.abs(b-stateRef.current.lateralX))
+      const safe = candidates.find(x => !traffic.some(v => v.active && Math.abs(v.z) < (v.length / 2 + 6) && Math.abs(v.x-x) < (v.width / 2 + 2)))
+      if (safe === undefined) return
+      Object.assign(stateRef.current, { lateralX:safe, speed:0, velX:0, yaw:0, steer:0, bodyRoll:0, bodyPitch:0 })
+      respawnCooldown.current = 3; stuckTime.current = 0
+      useGameStore.setState({ stuckHint:false, respawnFade:Date.now() })
+    }
+    window.addEventListener('wayfound-respawn', respawn)
+    return () => window.removeEventListener('wayfound-respawn', respawn)
+  }, [stateRef])
 
   // Objectives (Phase 6): mission sequential stages + endless challenges.
   const goalModeRef = useRef(null)
@@ -154,10 +169,14 @@ export function GameWorld() {
     }
 
     dt = Math.min(dt, 1 / 30)
+    if (running) respawnCooldown.current = Math.max(0, respawnCooldown.current - dt)
     if (running && cooldownRef.current > 0) cooldownRef.current = Math.max(0, cooldownRef.current - dt)
 
     if (running && useGameStore.getState().phase === 'playing') {
       const s = update(dt, actionsRef.current)
+      stuckTime.current = actionsRef.current.accelerate && Math.abs(s.speed) < 2 ? stuckTime.current + dt : 0
+      const stuck = stuckTime.current >= 4
+      if (useGameStore.getState().stuckHint !== stuck) useGameStore.setState({ stuckHint:stuck })
 
       // Advance virtual distance (meters) from speed
       const dMeters = Math.max(0, s.speed) * KMH_TO_MS * dt

@@ -343,6 +343,11 @@
 .drive-hud-actions { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
 .drive-hud-mobile-toggle { display:none; }
 .objective-pill { display:none; }
+.respawn-action, .respawn-hint { pointer-events:auto; position:absolute; left:16px; bottom:82px; background:#10242ee8; color:white; border:1px solid #607580; border-radius:8px; min-height:44px; padding:8px 12px; }
+.respawn-hint { bottom:132px; }
+.respawn-fade { position:fixed; inset:0; background:#071018; pointer-events:none; animation:respawn-fade .45s ease-out forwards; }
+@keyframes respawn-fade { from { opacity:.7 } to { opacity:0 } }
+@media (prefers-reduced-motion:reduce) { .respawn-fade { animation:none; display:none; } }
 @media (prefers-reduced-motion:reduce) { .objective-card * { transition:none!important; } }
 .drive-hud-menu-route, .drive-hud-mobile-settings { display:none; }
 @media (max-width:640px) {

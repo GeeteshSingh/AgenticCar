@@ -61,6 +61,9 @@ export function useKeyboardInput({ enabled = true } = {}) {
         case 'KeyH':
           if (isDown) requestHorn()
           break
+        case 'KeyR':
+          if (isDown) window.dispatchEvent(new Event('wayfound-respawn'))
+          break
         case 'KeyC':
           if (isDown) edgeQueueRef.current.push('toggleCamera')
           break
