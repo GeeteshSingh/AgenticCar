@@ -63,6 +63,10 @@ For Cloudflare Pages, set the build command to `npm run build`, the output direc
 
 ### Checking Content Security Policy reports
 
+The optional same-origin live counter uses `/api/hb`, `/api/start`, and `/api/stats`; test those endpoints alongside the game when reviewing the deployed CSP. Local Vite without a Worker hides the counter. To run the Worker locally after `npm run build`, use `npx wrangler dev` and open the local URL it prints; this uses local Durable Object storage.
+
+For a preview check, open two separate browsers, start a drive in each, and confirm the counts change. Check that the menu hides the counter when the API is unavailable, verify the display thresholds and phone layout, and test the Cloudflare preview before merging. The online count includes menu visitors; the start count represents distinct tab sessions rather than every run.
+
 The Cloudflare deployment applies `public/_headers`; `npm run preview` does not reproduce those hosting headers. On the deployed site, open Chrome DevTools → Console, reload, then test each route, WebAssembly physics, radio search and playback, station artwork, fonts, and the free-roam shop. Look for `Content Security Policy` report-only messages and record the blocked URL and directive. Test any supported third-party streams before tightening the policy.
 
 Only after investigation and browser testing show that legitimate resources work, change `Content-Security-Policy-Report-Only:` to `Content-Security-Policy:` in `public/_headers`, deploy, and repeat the checks. Report-only messages do not block resources; enforcement does.

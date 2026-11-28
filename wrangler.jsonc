@@ -9,5 +9,5 @@
   },
   "durable_objects": { "bindings": [{ "name": "LIVE_STATS", "class_name": "LiveStats" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LiveStats"] }],
-  "previews": {}
+  "previews": { "durable_objects": { "bindings": [{ "name": "LIVE_STATS", "class_name": "LiveStats" }] } }
 }
