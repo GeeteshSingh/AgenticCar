@@ -2,6 +2,7 @@ import { requestHorn } from '@/game/audio/drivingMix'
 import { createVehicleKeySelector } from '@/game/config/playerVehicles'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useEffect, useRef } from 'react'
+import { shouldPreventGameKey } from './keyPolicy'
 
 // Translates keyboard state into an abstract input-action object held in a
 // ref (no React state churn). Also exposes a small edge-action queue for
@@ -73,6 +74,8 @@ export function useKeyboardInput({ enabled = true } = {}) {
     }
 
     const onKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return
+      if (shouldPreventGameKey(e, e.target instanceof HTMLCanvasElement)) e.preventDefault()
       if (e.target instanceof HTMLElement && (e.target.closest('input, select, textarea, [contenteditable=true], .utility-panel, [data-radio-panel]'))) return
       if (e.repeat || pressedRef.current.has(e.code)) return
       const vehicle = vehicleSelector.current.select(e.code, performance.now())
@@ -80,7 +83,7 @@ export function useKeyboardInput({ enabled = true } = {}) {
       if (pressedRef.current.has(e.code)) return // ignore auto-repeat
       pressedRef.current.add(e.code)
       // Prevent page scroll on arrows/space during play
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+      if (!e.isTrusted && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
         e.preventDefault()
       }
       setKey(e.code, true)

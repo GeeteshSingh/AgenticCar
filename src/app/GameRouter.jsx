@@ -1,5 +1,5 @@
 import { brand } from '@/config/brand'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore, GAME_STATES } from '@/stores/useGameStore'
 import { GameCanvas } from '@/game/GameCanvas'
 import { MainMenu } from '@/ui/menus/MainMenu'
@@ -46,11 +46,19 @@ function LoadingGate({ children }) {
 // pause so the simulation state persists.
 function Session() {
   const phase = useGameStore((s) => s.phase)
+  const [canvasFocused, setCanvasFocused] = useState(false)
 
   useEffect(() => {
     const pauseOnHide = () => { if (document.hidden) useGameStore.getState().pause() }
     document.addEventListener('visibilitychange', pauseOnHide)
     return () => document.removeEventListener('visibilitychange', pauseOnHide)
+  }, [])
+  useEffect(() => {
+    const update = () => setCanvasFocused(document.activeElement instanceof HTMLCanvasElement)
+    document.addEventListener('focusin', update); document.addEventListener('focusout', update)
+    const blur = () => setCanvasFocused(false)
+    window.addEventListener('blur', blur)
+    return () => { document.removeEventListener('focusin', update); document.removeEventListener('focusout', update); window.removeEventListener('blur', blur) }
   }, [])
 
   return (
@@ -58,6 +66,7 @@ function Session() {
       <GameCanvas />
       {phase !== GAME_STATES.RESULTS && <CollisionFlash />}
       {phase === GAME_STATES.PLAYING && <TouchControls />}
+      {phase === GAME_STATES.PLAYING && !canvasFocused && <button className="click-to-play" onClick={() => document.querySelector('canvas[aria-label="Driving view"]')?.focus()}>Click to play</button>}
       {(phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED) && <GameHUD />}
       {phase === GAME_STATES.PAUSED && <PauseMenu />}
       {phase === GAME_STATES.RESULTS && <ResultsScreen />}

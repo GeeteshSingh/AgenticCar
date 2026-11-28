@@ -343,6 +343,8 @@
 .drive-hud-actions { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
 .drive-hud-mobile-toggle { display:none; }
 .objective-pill { display:none; }
+.click-to-play { position:absolute; z-index:25; top:72px; right:16px; padding:10px 14px; background:#10242ee8; color:white; border:1px solid #607580; border-radius:8px; }
+@media (any-pointer:coarse) and (not (any-pointer:fine)) { .click-to-play { display:none; } }
 @media (prefers-reduced-motion:reduce) { .objective-card * { transition:none!important; } }
 .drive-hud-menu-route, .drive-hud-mobile-settings { display:none; }
 @media (max-width:640px) {
