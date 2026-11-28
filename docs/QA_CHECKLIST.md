@@ -17,3 +17,10 @@ Record commit/build: __________  Date: __________  Tester: __________
 8. [ ] **QA-08 Settings:** Change sound, quality, day/night and reduced motion; reload. Expected: selected values persist and apply.
 9. [ ] **QA-09 Lifecycle:** Pause and resume, change tabs, blur the window, then drive for 15 minutes while observing memory. Expected: input clears on blur, state remains coherent and memory does not grow continuously.
 10. [ ] **QA-10 Security:** On the deployed preview run `curl -sI <preview-url>` and inspect the headers; search the browser console for `violates Content Security Policy` while using every feature. Expected: configured headers are present; record violations and affected feature.
+
+## Laptop input and display
+
+- [ ] Chrome, Edge, Firefox and Safari: test integrated GPU and battery saver, at 100%, 125% and 150% zoom on 1366×768, 1536×864, 1920×1080 and 2560×1440. Record overlaps and frame times.
+- [ ] On a touchscreen laptop, verify keyboard hints remain visible and Settings → Show touch controls enables buttons. Check keyboard and touch together.
+- [ ] Focus the canvas, try driving keys, Ctrl/Cmd shortcuts, Tab and F-keys; blur and use Click to play. Hide the tab and confirm the game pauses.
+- [ ] Toggle fullscreen, test unsupported fullscreen, and verify the quality suggestion after sustained slow frames. Record DPR and image clarity before and after adaptive downscale.
