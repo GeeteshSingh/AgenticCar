@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { useSettingsStore } from '@/stores/useSettingsStore'
-import { FreeRoamWorld } from '@/game/world/FreeRoamWorld'
+import { lazy, Suspense } from 'react'
+const FreeRoamWorld = lazy(() => import('@/game/world/FreeRoamWorld').then(module => ({ default: module.FreeRoamWorld })))
 import { GraphicsStats } from '@/game/GraphicsStats'
 import { GameWorld } from '@/game/world/GameWorld'
 
@@ -21,7 +22,7 @@ export function GameCanvas() {
     >
       <color attach="background" args={['#7db8f0']} />
       <fog attach="fog" args={['#bcd4ec', 220, 640]} />
-      {environment === 'thar_test' ? <FreeRoamWorld /> : <GameWorld />}
+      {environment === 'thar_test' ? <Suspense fallback={null}><FreeRoamWorld /></Suspense> : <GameWorld />}
       {showStats && <GraphicsStats />}
     </Canvas>
   )
