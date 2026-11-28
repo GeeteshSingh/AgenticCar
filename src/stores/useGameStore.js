@@ -18,6 +18,7 @@ export const GAME_STATES = {
 export const useGameStore = create((set, get) => ({
   // ---- Session lifecycle ----
   phase: GAME_STATES.MENU,
+  qualitySuggestion: false,
   runId: 0,
   mode: null, // 'mission' | 'endless'
 
@@ -52,6 +53,7 @@ export const useGameStore = create((set, get) => ({
     useSettingsStore.getState().setSetting('vehicle', 0)
     set({
       mode,
+      qualitySuggestion: false,
       runId: get().runId + 1,
       phase: GAME_STATES.LOADING,
       score: 0,

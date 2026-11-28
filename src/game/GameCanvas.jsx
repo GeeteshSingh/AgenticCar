@@ -6,6 +6,7 @@ import { lazy, Suspense } from 'react'
 const FreeRoamWorld = lazy(() => import('@/game/world/FreeRoamWorld').then(module => ({ default: module.FreeRoamWorld })))
 import { GraphicsStats } from '@/game/GraphicsStats'
 import { GameWorld } from '@/game/world/GameWorld'
+import { QualitySuggestion } from '@/game/QualitySuggestion'
 
 // React Three Fiber host for the game scene.
 // Phase 1: mounts an empty (placeholder) world with clamped pixel ratio.
@@ -27,6 +28,7 @@ export function GameCanvas() {
       <fog attach="fog" args={['#bcd4ec', 220, 640]} />
       {environment === 'thar_test' ? <Suspense fallback={<Html center><div role="status" style={{color:'white', background:'#0f172a', padding:12, whiteSpace:'nowrap'}}>Loading free roam…</div></Html>}><FreeRoamWorld /></Suspense> : <GameWorld />}
       {showStats && <GraphicsStats />}
+      <QualitySuggestion />
     </Canvas>
     </ChunkBoundary>
   )

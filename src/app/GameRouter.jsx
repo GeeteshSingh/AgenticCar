@@ -47,6 +47,7 @@ function LoadingGate({ children }) {
 function Session() {
   const phase = useGameStore((s) => s.phase)
   const [canvasFocused, setCanvasFocused] = useState(false)
+  const qualitySuggestion = useGameStore(s => s.qualitySuggestion)
 
   useEffect(() => {
     const pauseOnHide = () => { if (document.hidden) useGameStore.getState().pause() }
@@ -67,6 +68,7 @@ function Session() {
       {phase !== GAME_STATES.RESULTS && <CollisionFlash />}
       {phase === GAME_STATES.PLAYING && <TouchControls />}
       {phase === GAME_STATES.PLAYING && !canvasFocused && <button className="click-to-play" onClick={() => document.querySelector('canvas[aria-label="Driving view"]')?.focus()}>Click to play</button>}
+      {phase === GAME_STATES.PLAYING && qualitySuggestion && <div className="quality-suggestion" role="status">The game may run more smoothly at a lower graphics quality. <button onClick={() => useGameStore.setState({qualitySuggestion:false})}>Dismiss</button></div>}
       {(phase === GAME_STATES.PLAYING || phase === GAME_STATES.PAUSED) && <GameHUD />}
       {phase === GAME_STATES.PAUSED && <PauseMenu />}
       {phase === GAME_STATES.RESULTS && <ResultsScreen />}
