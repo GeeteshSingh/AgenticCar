@@ -18,7 +18,7 @@ export function TouchControls() {
     window.addEventListener('blur', reset)
     return () => { window.removeEventListener('blur', reset); reset() }
   }, [])
-  const control = (code, label, Icon) => <button key={code} type="button" aria-label={label} onPointerDown={event => {
+  const control = (code, label, Icon) => <button key={code} type="button" aria-label={label} title={label} onPointerDown={event => {
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
     held.current.set(event.pointerId, code); send('keydown', code)
