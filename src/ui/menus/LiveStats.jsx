@@ -10,7 +10,7 @@ export function LiveStats() {
       controller?.abort(); controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), LIVE_STATS.timeoutMs)
       try {
-        const response = await fetch('/api/stats', { signal:controller.signal, cache:'no-store' })
+        const response = await fetch('/api/stats', { signal:controller.signal, cache:'no-store', credentials:'omit' })
         if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('unavailable')
         const message = formatLiveStats(await response.json())
         if (active) setText(message)
