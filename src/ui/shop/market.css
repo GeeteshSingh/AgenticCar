@@ -9,7 +9,13 @@
 .market-sheet li { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 0; border-top:1px solid #4c695a; }
 .market-sheet li small { display:block; margin-top:3px; }
 .market-quantity { display:flex; align-items:center; gap:12px; }
-.market-sheet button { min-width:40px; min-height:40px; padding:8px 12px; background:#d4e8d3; color:#183126; border-radius:8px; }
+.market-sheet button { min-width:44px; min-height:44px; padding:8px 12px; background:#d4e8d3; color:#183126; border-radius:8px; }
 .market-sheet button:disabled { opacity:.45; }
 .market-sheet button:focus-visible { outline:3px solid #fff; outline-offset:2px; }
 .market-sheet footer { border-top:1px solid #4c695a; padding-top:18px; margin-top:6px; }
+.market-icon { display:grid; place-items:center; flex:none; width:44px; height:44px; border-radius:10px; background:#294b3d; font-size:22px; }
+.market-item { flex:1; min-width:0; }
+@media (max-width:640px) {
+  .market-overlay { align-items:end; padding:0; }
+  .market-sheet { width:100%; max-height:min(85dvh,700px); border-radius:18px 18px 0 0; padding:20px max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+}
