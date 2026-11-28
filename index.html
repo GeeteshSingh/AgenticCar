@@ -15,8 +15,19 @@
     <meta name="twitter:description" content="%BRAND_DESCRIPTION%" />
     <meta name="twitter:image" content="https://wayfound.singh-geetesh1998.workers.dev/brand/og.png" />
     <title>%BRAND_NAME%</title>
+    <style>
+      #boot-screen { position:fixed; inset:0; display:grid; place-content:center; justify-items:center; gap:1rem; background:%BRAND_BACKGROUND%; color:#f1f5f9; font:16px system-ui,sans-serif; text-align:center; }
+      #boot-screen strong { font-size:2rem; }
+      #boot-screen p { margin:0; }
+      .boot-spinner { width:2rem; height:2rem; border:3px solid #334155; border-top-color:#b1e8c0; border-radius:50%; animation:boot-spin 1s linear infinite; }
+      .boot-delay { opacity:0; animation:boot-show 0s 15s forwards; }
+      @keyframes boot-spin { to { transform:rotate(360deg); } }
+      @keyframes boot-show { to { opacity:1; } }
+      @media (prefers-reduced-motion:reduce) { .boot-spinner { animation:none; } }
+    </style>
   </head>
   <body>
+    <div id="boot-screen" role="status"><strong>%BRAND_NAME%</strong><p>%BRAND_TAGLINE%</p><span class="boot-spinner" aria-hidden="true"></span><p class="boot-delay">Still loading... check your connection</p></div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
