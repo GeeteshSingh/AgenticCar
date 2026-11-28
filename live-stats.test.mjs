@@ -55,3 +55,26 @@ assert.equal(called, 0)
 
 assert.equal((await handleApi(request('/api/stats'), { ...env, LIVE_STATS_ENABLED:'false' })).status, 404)
 assert.equal(called, 0)
+
+const { createHeartbeatScheduler } = await import('./src/game/liveStatsClient.js')
+let clock = 0, visible = true, listener, heartbeatCount = 0, pendingTimer, timerAt
+const mountHeartbeatTest = createHeartbeatScheduler({
+  send: async () => { heartbeatCount++; return false }, // includes 429/failure: no retry
+  visible: () => visible, now: () => clock,
+  setTimer: (fn, ms) => { pendingTimer = fn; timerAt = clock + ms; return fn },
+  clearTimer: () => { pendingTimer = null },
+  subscribe: fn => { listener = fn; return () => { listener = null } },
+})
+const firstMount = mountHeartbeatTest()
+const secondMount = mountHeartbeatTest()
+assert.equal(heartbeatCount, 1)
+clock = 1000; visible = false; listener(); visible = true; listener(); listener()
+assert.equal(heartbeatCount, 1)
+firstMount(); secondMount()
+const remount = mountHeartbeatTest()
+assert.equal(heartbeatCount, 1)
+clock = 25000; listener(); assert.equal(heartbeatCount, 2)
+clock = 30000; listener(); assert.equal(heartbeatCount, 2)
+assert.equal(timerAt, 55000)
+clock = timerAt; pendingTimer(); assert.equal(heartbeatCount, 3)
+remount()
