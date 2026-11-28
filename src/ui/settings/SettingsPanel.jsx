@@ -21,6 +21,7 @@ export function SettingsPanel() {
       <label>Driving sound volume <input aria-label="Driving sound volume" type="range" min="0" max="1" step=".01" value={settings.engineVolume} onChange={e=>settings.setSetting('engineVolume',+e.target.value)}/></label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.cruise} onChange={e=>settings.setSetting('cruise',e.target.checked)}/> Cruise assist</label>
       <label className="flex gap-3"><input type="checkbox" checked={settings.cycle} onChange={e=>settings.setSetting('cycle',e.target.checked)}/> Automatic day/night cycle</label>
+      <label className="flex gap-3"><input type="checkbox" checked={settings.reduceEffects} onChange={e=>settings.setSetting('reduceEffects',e.target.checked)}/> Reduce flashing &amp; vibration</label>
       <p className="text-xs text-slate-400">W / ↑ accelerate · S / ↓ brake/reverse · A/D or ←/→ steer · Space handbrake · C camera · H horn · P radio · Esc pause</p>
     </section>}
   </div>

@@ -12,6 +12,7 @@ import { KMH_TO_MS } from '@/game/config/vehicleConfig'
 import { createCollisionEffects } from '@/game/effects/useCollisionEffects'
 import { emitImpact } from '@/game/audio/impact'
 import { setCollisionFlash } from '@/game/effects/collisionSignal'
+import { ImpactParticles } from '@/game/effects/ImpactParticles'
 import { createScoringManager } from '@/game/scoring/ScoringManager'
 import { createOvertakeDetector } from '@/game/scoring/overtakeDetector'
 import { createNearMissDetector } from '@/game/scoring/nearMissDetector'
@@ -93,8 +94,12 @@ export function GameWorld() {
   const handleCollision = (assessment) => {
     if (useGameStore.getState().mode === 'relaxed') return
     integrityRef.current = Math.max(0, integrityRef.current - assessment.damage)
-    effectsRef.current.triggerSeverity(assessment.severity)
-    emitImpact(assessment.severity)
+    const reduced = useSettingsStore.getState().reduceEffects || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    effectsRef.current.triggerSeverity(assessment.severity, reduced)
+    emitImpact(assessment.severity, assessment.closingKmh)
+    if (!reduced && typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try { navigator.vibrate(Math.min(80, Math.max(10, assessment.closingKmh / 2))) } catch { /* Vibration is optional. */ }
+    }
     cooldownRef.current = 0.6 // brief invulnerability so we don't multi-hit
     // Severe/moderate hits also bleed speed (km/h) and temporary accel loss
     const s = stateRef.current
@@ -290,6 +295,7 @@ export function GameWorld() {
 
       {/* Player car + camera both read the same controller state ref */}
       <PlayerCar stateRef={stateRef} />
+      <ImpactParticles playerStateRef={stateRef} />
       <CameraManager targetRef={stateRef} cameraMode={cameraMode} effectsRef={effectsRef} />
 
       {/* HUD overlay is DOM, rendered by AppShell/GameRouter separately */}

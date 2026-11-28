@@ -1,11 +1,12 @@
 const listeners = new Set()
-export function emitImpact(severity) { for (const listener of listeners) listener(severity) }
+export function emitImpact(severity, closingKmh) { for (const listener of listeners) listener(severity, closingKmh) }
 export function subscribeImpact(listener) { listeners.add(listener); return () => listeners.delete(listener) }
 
 // Reuse the engine's noise buffer; each impact has a bounded, self-cleaning voice.
-export function playImpact(context, buffer, severity, volume) {
+export function playImpact(context, buffer, severity, volume, closingKmh) {
   if (!context || context.state !== 'running' || volume <= 0) return
-  const intensity = {light: .3, moderate: .6, severe: 1}[severity]
+  const base = {light: .3, moderate: .6, severe: 1}[severity]
+  const intensity = base && Number.isFinite(closingKmh) ? Math.max(.1, Math.min(1, closingKmh / 160)) : base
   if (!intensity) return
   const source = context.createBufferSource()
   const filter = context.createBiquadFilter()

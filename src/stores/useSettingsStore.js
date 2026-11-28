@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { PLAYER_VEHICLES } from '../game/config/playerVehicles.js'
 import { INDIAN_ROUTES } from '../game/config/environmentConfig.js'
-const defaults = { vehicle: 0, environment: 'forest', time: 'day', weather: 'fog', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.45, camera: 'chase', cycle: true }
+const defaults = { vehicle: 0, environment: 'forest', time: 'day', weather: 'fog', quality: 'medium', sensitivity: 1, cruise: true, engineVolume: 0.45, camera: 'chase', cycle: true, reduceEffects: false }
 function restore() {
   try {
     const saved = JSON.parse(localStorage.getItem('agenticcar-settings') || '{}')
@@ -22,7 +22,7 @@ function sanitize(values) {
   for (const [key, list] of Object.entries(choices)) if (list.includes(values[key])) out[key] = values[key]
   if (Number.isFinite(values.sensitivity)) out.sensitivity = Math.max(.4, Math.min(2, values.sensitivity))
   if (Number.isFinite(values.engineVolume)) out.engineVolume = Math.max(0, Math.min(1, values.engineVolume))
-  for (const key of ['cruise','cycle']) if (typeof values[key] === 'boolean') out[key] = values[key]
+  for (const key of ['cruise','cycle','reduceEffects']) if (typeof values[key] === 'boolean') out[key] = values[key]
   return out
 }
 export const useSettingsStore = create((set, get) => ({

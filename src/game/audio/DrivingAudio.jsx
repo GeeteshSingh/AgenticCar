@@ -86,7 +86,7 @@ export function DrivingAudio() {
       if (context.state === 'running') sound()
       else context.resume().then(sound).catch(audioFailure)
     })
-    const unsubscribe = subscribeImpact(severity => playImpact(context, noiseBuffer, severity, useSettingsStore.getState().engineVolume))
+    const unsubscribe = subscribeImpact((severity, speed) => playImpact(context, noiseBuffer, severity, useSettingsStore.getState().engineVolume, speed))
     window.addEventListener('pointerdown', start)
     window.addEventListener('keydown', start)
     return () => { unsubscribe(); unsubscribeHorn(); unsubscribeStart(); for (const voice of voices) voice.oscillator.stop(); for (const horn of horns) horn.stop(); window.removeEventListener('pointerdown', start); window.removeEventListener('keydown', start); clearInterval(timer); engine?.stop(); exhaust?.stop(); wind?.stop(); context?.close() }
