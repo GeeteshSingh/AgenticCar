@@ -8,7 +8,7 @@ const html = readFileSync('dist/index.html', 'utf8')
 assert.ok(statSync('dist/_headers').isFile())
 for (const value of [`<title>${brand.name}</title>`, 'name="description"', 'property="og:title"', 'property="og:description"', 'property="og:image"', 'rel="icon"']) assert.ok(html.includes(value), `Missing ${value}`)
 const assets = readdirSync('dist/assets')
-for (const [label, pattern, max] of [['main', /^index-.*\.js$/, 375_000], ['free-roam', /^FreeRoamWorld-.*\.js$/, 20_000], ['marketplace', /^MarketPanel-.*\.js$/, 20_000]]) {
+for (const [label, pattern, max] of [['main', /^index-.*\.js$/, 371_786], ['free-roam', /^FreeRoamWorld-.*\.js$/, 20_000], ['marketplace', /^MarketPanel-.*\.js$/, 20_000]]) {
   const matches = assets.filter(f => pattern.test(f))
   assert.equal(matches.length, 1, `Expected one ${label} chunk`)
   const bytes = gzipSync(readFileSync(join('dist/assets', matches[0]))).length
