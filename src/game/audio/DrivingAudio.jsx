@@ -50,7 +50,8 @@ export function DrivingAudio() {
         const settings = useSettingsStore.getState()
         const volume = phase === 'playing' ? useSettingsStore.getState().engineVolume : 0
         const speed = Math.abs(speedKmh)
-        const mix = engineMix(speed, settings.engineVolume, phase, playerVehicle(settings.vehicle).type)
+        const vehicle = playerVehicle(settings.vehicle)
+        const mix = engineMix(speed, settings.engineVolume, phase, vehicle.type, vehicle.topSpeedKmh)
         const profile = soundProfile(playerVehicle(settings.vehicle).type)
         engine.frequency.setTargetAtTime(mix.frequency || 80, context.currentTime, .12)
         exhaust.frequency.setTargetAtTime((mix.frequency || 80) / 2, context.currentTime, .12)
@@ -76,12 +77,22 @@ export function DrivingAudio() {
         if (useGameStore.getState().phase !== 'playing' || context.currentTime - lastHorn < .5) return
         lastHorn = context.currentTime
         const now = context.currentTime, settings = useSettingsStore.getState(), volume = settings.engineVolume
-        const profile = soundProfile(playerVehicle(settings.vehicle).type)
-        horns.forEach((horn, i) => horn.frequency.setValueAtTime(profile.horn[i], now))
+        const type = playerVehicle(settings.vehicle).type
+        const profile = soundProfile(type)
+        horns.forEach((horn, i) => { horn.type = type === 'cycle' ? 'sine' : 'sawtooth'; horn.frequency.setValueAtTime(profile.horn[i], now) })
         hornGain.gain.cancelScheduledValues(now); hornGain.gain.setValueAtTime(0, now)
-        hornGain.gain.linearRampToValueAtTime(volume * .35, now + .025)
-        hornGain.gain.setValueAtTime(volume * .35, now + .3)
-        hornGain.gain.linearRampToValueAtTime(0, now + .4)
+        if (type === 'cycle' && volume > 0) {
+          for (const offset of [0, .17]) {
+            hornGain.gain.setValueAtTime(0, now + offset)
+            hornGain.gain.linearRampToValueAtTime(volume * .3, now + offset + .01)
+            hornGain.gain.exponentialRampToValueAtTime(.001, now + offset + .15)
+          }
+          hornGain.gain.setValueAtTime(0, now + .33)
+        } else if (type !== 'cycle') {
+          hornGain.gain.linearRampToValueAtTime(volume * .35, now + .025)
+          hornGain.gain.setValueAtTime(volume * .35, now + .3)
+          hornGain.gain.linearRampToValueAtTime(0, now + .4)
+        }
       }
       if (context.state === 'running') sound()
       else context.resume().then(sound).catch(audioFailure)

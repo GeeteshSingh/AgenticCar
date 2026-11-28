@@ -53,10 +53,16 @@ See [Architecture](docs/ARCHITECTURE.md), [Testing](docs/TESTING.md), [Project s
 
 Troubleshooting: run `npm ci` if Vite/Oxlint is missing; use a supported Node version; try low graphics quality if rendering is slow; choose another HTTPS MP3 station after a playback error. Storage-disabled browsers keep settings only for the current session and display a notice. Fullscreen WebGL requires hardware/browser support.
 
-Vehicle keys: 1 Thar-inspired SUV, 2 truck, 3 bicycle, 4 hatchback, 5 sedan, 6 auto rickshaw, 7 motorcycle, 8 bus, 9 pickup. Original procedural designs; no manufacturer models or logos. Speed limits and collision dimensions follow the selected vehicle.
+Vehicle keys: 1 Desert SUV, 2 truck, 3 bicycle, 4 hatchback, 5 sedan, 6 auto rickshaw, 7 motorcycle, 8 bus, 9 pickup. Original procedural designs; no manufacturer models or logos. Speed limits and collision dimensions follow the selected vehicle.
 
 Collision feedback includes a synthesized impact sound (controlled by engine volume), red vignette and camera shake; reduced-motion preference suppresses shake. The results overlay keeps the stopped scene visible. Use **C** or the HUD View button to cycle chase, hood and a stylized right-hand-drive cockpit; bicycles and motorcycles use handlebars. The HUD Vehicles button opens the 1–9 selection shortcuts.
 
 ## Deploy
 
 For Cloudflare Pages, set the build command to `npm run build`, the output directory to `dist`, and the environment variable `NODE_VERSION` to `22`.
+
+### Checking Content Security Policy reports
+
+The Cloudflare deployment applies `public/_headers`; `npm run preview` does not reproduce those hosting headers. On the deployed site, open Chrome DevTools → Console, reload, then test each route, WebAssembly physics, radio search and playback, station artwork, fonts, and the free-roam shop. Look for `Content Security Policy` report-only messages and record the blocked URL and directive. Test any supported third-party streams before tightening the policy.
+
+Only after investigation and browser testing show that legitimate resources work, change `Content-Security-Policy-Report-Only:` to `Content-Security-Policy:` in `public/_headers`, deploy, and repeat the checks. Report-only messages do not block resources; enforcement does.

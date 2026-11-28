@@ -342,6 +342,9 @@
 
 .drive-hud-actions { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
 .drive-hud-mobile-toggle { display:none; }
+.objective-pill { display:none; }
+@media (prefers-reduced-motion:reduce) { .objective-card * { transition:none!important; } }
+.drive-hud-menu-route, .drive-hud-mobile-settings { display:none; }
 @media (max-width:640px) {
   .drive-hud { padding:12px; }
   .drive-hud-context { max-width:calc(100vw - 130px); gap:8px; padding:5px 8px; }
@@ -358,4 +361,32 @@
   .drive-touch-group { gap:5px; }
   .drive-touch button { width:clamp(42px,12vw,52px); height:48px; }
   .vehicle-shortcuts { top:105px; right:12px; }
+}
+
+@media (pointer:coarse), (max-width:640px) {
+  .drive-hud { padding:0; }
+  .drive-hud-context { position:absolute; top:max(8px,env(safe-area-inset-top)); left:max(8px,env(safe-area-inset-left)); padding:0; background:transparent; border:0; }
+  .drive-hud-route, .keyboard-hint { display:none; }
+  .drive-hud-mobile-toggle { display:block; pointer-events:auto; min-width:48px; min-height:48px; padding:8px 12px; border:1px solid #607580; border-radius:10px; background:#0a1822cf; color:#fff; }
+  .drive-hud-actions { display:none; position:absolute; top:52px; left:0; width:min(230px,80vw); max-height:calc(100dvh - 110px); overflow:auto; padding:10px; background:#10242ef2; border:1px solid #607580; border-radius:10px; }
+  .drive-hud-actions.is-open { display:grid; gap:4px; }
+  .drive-hud-actions .mobile-pause { order:-2; }
+  .drive-hud-actions .drive-hud-mobile-settings { order:-1; }
+  .drive-hud-actions button { min-height:44px; text-align:left; }
+  .drive-hud-menu-route, .drive-hud-mobile-settings { display:block; }
+  .vehicle-shortcuts { top:60px; left:max(8px,env(safe-area-inset-left)); right:auto; z-index:25; max-width:calc(100vw - 16px); max-height:65dvh; overflow:auto; }
+  .vehicle-shortcuts button { min-height:44px; }
+  .vehicle-shortcuts kbd { display:none; }
+  .drive-hud-dashboard { top:max(8px,env(safe-area-inset-top)); bottom:auto; left:auto; right:max(8px,env(safe-area-inset-right)); transform:none; width:auto; padding:8px 12px; }
+  .drive-hud-speed { font-size:24px; }
+  .drive-hud-stat { display:none; }
+  .drive-hud-objective { top:65px; left:max(8px,env(safe-area-inset-left)); max-width:min(220px,45vw); }
+  .drive-hud-objective.controls-open { display:none; }
+  .objective-card { width:100%; max-height:calc(100dvh - 135px); overflow:auto; }
+  .objective-pill { display:block; width:100%; min-height:44px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+  .objective-card.is-collapsed { padding:0 10px; }
+  .objective-card.is-collapsed .objective-details { display:none; }
+  .drive-touch { display:flex; left:max(8px,env(safe-area-inset-left)); right:max(8px,env(safe-area-inset-right)); bottom:max(8px,env(safe-area-inset-bottom)); }
+  .drive-touch button { width:48px; height:48px; background:rgba(10,24,34,.68); }
+  .settings-driving > .utility-button { display:none; }
 }

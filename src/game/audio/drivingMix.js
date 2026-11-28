@@ -10,11 +10,12 @@ export const SOUND_PROFILES = {
   pickup: {idle: 91, rev: .95, exhaust: .85, horn: [330, 415]},
 }
 export function soundProfile(type) { return SOUND_PROFILES[type] || SOUND_PROFILES.suv }
-export function engineMix(speed, volume, phase, type) {
+export function engineMix(speed, volume, phase, type, topSpeedKmh = 220) {
   const running = phase === 'playing' && type !== 'cycle'
   const profile = soundProfile(type)
-  return { frequency: profile.idle + Math.min(220, Math.abs(speed)) * profile.rev,
-    gain: running ? volume * (.16 + Math.min(220, Math.abs(speed)) / 900) : 0 }
+  const progress = Math.min(1, Math.abs(speed) / topSpeedKmh)
+  return { frequency: profile.idle + progress * 160 * profile.rev,
+    gain: running ? volume * (.16 + progress * .18) : 0 }
 }
 export function trafficMix(vehicles, playerX, playerSpeed, volume, phase) {
   if (phase !== 'playing' || volume <= 0) return []

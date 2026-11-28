@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { roadFrame, terrainHeight } from './roadProfile'
+import { nearBillboard } from './billboardClearance'
 
-const ROUTES = { kashmir: 'JAMMU & KASHMIR', countryside: 'DECCAN PLATEAU', forest: 'WESTERN GHATS', desert: 'THAR DESERT', coast: 'KONKAN COAST' }
+const ROUTES = { thar_test: 'TEST ROUTE', kashmir: 'JAMMU & KASHMIR', countryside: 'DECCAN PLATEAU', forest: 'WESTERN GHATS', desert: 'THAR DESERT', coast: 'KONKAN COAST' }
 const SPACING = 180
 const COUNT = 5
 
@@ -26,6 +27,7 @@ function Marker({ slot, distanceRef, environment }) {
     const distance = distanceRef.current || 0
     const cell = Math.floor(distance / SPACING) + slot
     const absolute = cell * SPACING + 65
+    ref.current.visible = !nearBillboard(absolute)
     const z = absolute - distance
     const frame = roadFrame(z, distance, 1, environment)
     const offset = 13

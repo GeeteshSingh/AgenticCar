@@ -9,6 +9,7 @@ export default defineConfig({
     name: 'brand-metadata',
     transformIndexHtml(html) {
       return html.replaceAll('%BRAND_NAME%', brand.name)
+        .replaceAll('%BRAND_TAGLINE%', brand.tagline)
         .replaceAll('%BRAND_DESCRIPTION%', brand.description)
         .replaceAll('%BRAND_BACKGROUND%', brand.colors.background)
     },

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { useGameStore as store } from '@/stores/useGameStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 store.getState().startRun('endless')
 store.getState().beginPlaying()
 store.getState().updateStats({score: 321, distanceMeters: 90, integrity: 42, topSpeed: 180})
@@ -26,3 +27,14 @@ store.getState().recordRoadFind({id: 'sample', name: 'Sample', distance: 560})
 assert.equal(store.getState().roadFinds.length, 1, 'each billboard brand appears once per session')
 store.getState().startRun('endless')
 assert.deepEqual(store.getState().roadFinds, [], 'new run clears previous finds')
+
+useSettingsStore.getState().setSetting('vehicle', 9)
+store.getState().startRun('endless')
+assert.equal(useSettingsStore.getState().vehicle, 0, 'new runs start in vehicle 1')
+store.getState().beginPlaying()
+useSettingsStore.getState().setSetting('vehicle', 4)
+store.getState().pause()
+store.getState().resume()
+assert.equal(useSettingsStore.getState().vehicle, 4, 'pause and resume keep the selected vehicle')
+store.getState().startRun('endless')
+assert.equal(useSettingsStore.getState().vehicle, 0, 'restart resets the vehicle')

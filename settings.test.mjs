@@ -27,3 +27,5 @@ assert.equal(store.getState().time, 'night')
 
 store.getState().setSetting('cycle', false)
 assert.equal(store.getState().cycle, false)
+store.getState().setSetting('reduceEffects', true)
+assert.equal(store.getState().reduceEffects, true)

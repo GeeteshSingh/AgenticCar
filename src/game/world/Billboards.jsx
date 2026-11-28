@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { findBillboard } from '@/game/config/billboardConfig'
-import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useGameStore } from '@/stores/useGameStore'
 import { roadFrame, terrainHeight } from './roadProfile'
+import { BILLBOARD_SPACING as SPACING, BILLBOARD_OFFSET } from './billboardClearance'
 
-const SPACING = 400
 const worldPosition = new THREE.Vector3()
 const projection = new THREE.Matrix4()
 const frustum = new THREE.Frustum()
@@ -17,12 +16,11 @@ export function Billboards({ distanceRef, environment }) {
 function Billboard({ slot, distanceRef, environment }) {
   const group = useRef(), cellRef = useRef(-1), seenTime = useRef(0), eligible = useRef(false), lastDistance = useRef(0)
   const { camera, gl } = useThree()
-  const quality = useSettingsStore(s => s.quality)
   const label = useMemo(() => {
-    const canvas = document.createElement('canvas'); canvas.width = quality === 'low' ? 1024 : 2048; canvas.height = canvas.width / 2
+    const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 512
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy())
     return { canvas, texture }
-  }, [gl, quality])
+  }, [gl])
   useEffect(() => { cellRef.current = -1; return () => label.texture.dispose() }, [label])
   useFrame((_, delta) => {
     if (!group.current) return
@@ -43,10 +41,10 @@ function Billboard({ slot, distanceRef, environment }) {
       ctx.font = '600 56px sans-serif'; ctx.fillText(brand.hindi, 68, 245, 890)
       ctx.font = '44px sans-serif'; ctx.fillText(brand.tagline, 68, 312, 890)
       ctx.font = '24px sans-serif'; ctx.fillText('आपका सफ़र, आपकी राह', 68, 423, 600)
-      ctx.textAlign = 'right'; ctx.font = '24px sans-serif'; ctx.fillText('FICTIONAL SPONSORED EXAMPLE', 954, 462, 540)
+      ctx.textAlign = 'right'; ctx.font = 'bold 28px sans-serif'; ctx.fillText('FICTIONAL SPONSORED EXAMPLE', 954, 462, 540)
       label.texture.needsUpdate = true
     }
-    const absolute = cell * SPACING + 160, z = absolute - distance, offset = 21
+    const absolute = cell * SPACING + BILLBOARD_OFFSET, z = absolute - distance, offset = 21
     const road = roadFrame(z, distance, 1, environment)
     group.current.position.set(road.x + offset, road.y + terrainHeight(offset, absolute, environment), z)
     group.current.rotation.y = road.heading

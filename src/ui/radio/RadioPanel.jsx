@@ -115,7 +115,7 @@ export function RadioPanel() {
   const changeStation = direction => { if (stations.length) play(stations[(index + direction + stations.length) % stations.length]) }
   const locationField = (field, value) => radio.setLocation({ ...radio.location, [field]: value })
   return <div className={`radio-root ${['playing', 'paused'].includes(phase) ? 'radio-root-driving' : ''}`} onKeyDown={event => { if (radio.open) event.stopPropagation() }} onKeyUp={event => { if (radio.open) event.stopPropagation() }}>
-    <button ref={toggleRef} className="radio-toggle" onClick={() => radio.open ? close() : radio.setOpen(true)} aria-expanded={radio.open} aria-controls="radio-panel">♫ {radio.status === 'playing' ? radio.selected?.name : 'Radio'} <span className="radio-state">{radio.status === 'loading' ? 'Connecting…' : ''}</span></button>
+    <button ref={toggleRef} className="radio-toggle" onClick={() => radio.open ? close() : radio.setOpen(true)} aria-expanded={radio.open} aria-controls="radio-panel" aria-label="Radio">♫ <span className="radio-toggle-label">{radio.status === 'playing' ? radio.selected?.name : 'Radio'} <span className="radio-state">{radio.status === 'loading' ? 'Connecting…' : ''}</span></span></button>
     {radio.open && <section id="radio-panel" ref={panelRef} tabIndex={-1} aria-label="Internet radio" className="radio-panel" onKeyDown={event => {
       if (event.key === 'Escape') { event.stopPropagation(); close() }
       event.stopPropagation()

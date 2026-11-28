@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict'
+import { PRODUCTS, updateCart, restoreCart } from './src/ui/shop/catalog.js'
+let cart = updateCart({}, PRODUCTS[0].id, 1)
+assert.equal(cart.tea, 1)
+cart = updateCart(cart, 'tea', -1)
+assert.deepEqual(cart, {})
+assert.deepEqual(updateCart({}, 'unknown', 1), {})
+assert.deepEqual(restoreCart({tea:100, snack:-1, unknown:5}), {tea:20})
+assert.deepEqual(restoreCart(null), {})
+assert.deepEqual(restoreCart(JSON.parse(JSON.stringify({ tea: 2, snack: 3 }))), { tea: 2, snack: 3 })
+assert.deepEqual(restoreCart({ tea: '2', snack: 1.5, mango: -3, water: null }), {})
+assert.deepEqual(restoreCart([]), {})
+assert.deepEqual(updateCart({ tea: 1 }, 'tea', -2), {})
+assert.deepEqual(updateCart({ tea: 20 }, 'tea', 1), { tea: 20 })
+assert.equal(Object.values(restoreCart({ tea: 2, snack: 3 })).reduce((a, b) => a + b, 0), 5)
+console.log('Demo cart validates products, quantities and saved data')

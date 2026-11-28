@@ -60,12 +60,12 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
     let accel = 0 // km/h per second
     if (brakeInput > 0 && s.speed > 1) {
       // Active braking always wins over auto-drive.
-      accel -= VEHICLE.brakingPower * brakeInput
+      accel -= (VEHICLE.brakingPower + Math.max(0, s.speed) * .15) * brakeInput
     } else if (brakeInput > 0 && canReverse) {
       accel -= VEHICLE.reversePower * brakeInput
     } else {
       // Auto-cruise toward a comfortable speed; boost (up arrow) pushes to max.
-      const targetSpeed = accelInput > 0 ? playerVehicle(settings.vehicle).maxSpeed : (settings.cruise ? Math.min(VEHICLE.cruiseSpeed, playerVehicle(settings.vehicle).maxSpeed) : 0)
+      const targetSpeed = accelInput > 0 ? playerVehicle(settings.vehicle).topSpeedKmh : (settings.cruise ? Math.min(VEHICLE.cruiseSpeed, playerVehicle(settings.vehicle).topSpeedKmh) : 0)
       if (s.speed < targetSpeed) {
         accel += (playerVehicle(settings.vehicle).enginePower ?? VEHICLE.enginePower) * (accelInput > 0 ? 1 : 0.6)
       } else if (s.speed > targetSpeed) {
@@ -79,7 +79,7 @@ export function useArcadeVehicleController(actionsRef, { active = true } = {}) {
     if (s.speed > 0) accel -= VEHICLE.rollingResistance
 
     s.speed += accel * dt
-    s.speed = Math.min(s.speed, playerVehicle(settings.vehicle).maxSpeed)
+    s.speed = Math.min(s.speed, playerVehicle(settings.vehicle).topSpeedKmh)
     if (s.speed < -VEHICLE.maxReverseSpeed) s.speed = -VEHICLE.maxReverseSpeed
     // Clamp tiny speeds to rest
     if (Math.abs(s.speed) < 0.05) s.speed = 0

@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict'
+import { nearBillboard, BILLBOARD_CLEARANCE } from './src/game/world/billboardClearance.js'
+assert.ok(nearBillboard(160) && nearBillboard(560))
+assert.equal(nearBillboard(160 + BILLBOARD_CLEARANCE), false)
+assert.equal(nearBillboard(-240), false)
 import { sampleRoad, roadFrame, terrainHeight } from './src/game/world/roadProfile.js'
 for (const distance of [0, 47.99, 48, 1000, 1000000]) {
   const frame = roadFrame(0, distance)
