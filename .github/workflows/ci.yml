@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main, wayfound/ci-fix]
   pull_request:
 
 permissions:
