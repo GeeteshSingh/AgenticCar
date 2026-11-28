@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { roadFrame, terrainHeight } from './roadProfile'
+import { nearBillboard } from './billboardClearance'
 
 // A small fixed pool follows the road; emissive lamps avoid per-lamp lights.
 export function NightLamps({ distanceRef, environment, time, cycle }) {
@@ -10,6 +11,7 @@ export function NightLamps({ distanceRef, environment, time, cycle }) {
     const distance = distanceRef.current || 0
     group.current.children.forEach((lamp, index) => {
       const absolute = (Math.floor(distance / 45) + index - 1) * 45
+      lamp.visible = !nearBillboard(absolute)
       const z = absolute - distance, offset = index % 2 ? -10 : 10
       const road = roadFrame(z, distance, 1, environment)
       lamp.position.set(road.x + offset, road.y + terrainHeight(offset, absolute, environment), z)
