@@ -38,7 +38,7 @@ export function MainMenu() {
       </section>
       <section className="drive-menu-setup" aria-label="Set up your drive">
         <fieldset><legend>Your Indian route</legend><div className="drive-environments">{environments.map(([id, label]) => <button key={id} aria-pressed={environment === id} onClick={() => setSetting('environment', id)}>{label}</button>)}</div><p className="drive-route-description">{INDIAN_ROUTES[environment]?.region} — {INDIAN_ROUTES[environment]?.description}</p></fieldset>
-        <fieldset><legend>Your drive</legend><div className="drive-modes">{modes.map(({id, title, icon: Icon, description}) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}><Icon size={18} aria-hidden="true" /><span><strong>{title}</strong></span></button>)}</div><p className="drive-mode-description">{modes.find(item => item.id === mode)?.description}</p></fieldset>
+        <fieldset><legend>Your drive</legend><div className="drive-modes">{modes.map(({id, title, icon: Icon}) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}><Icon size={18} aria-hidden="true" /><span><strong>{title}</strong></span></button>)}</div><p className="drive-mode-description">{modes.find(item => item.id === mode)?.description}</p></fieldset>
         <Button className="drive-start" onClick={() => startRun(mode)}>Start {modes.find(m => m.id === mode).title.toLowerCase()}<ArrowRight aria-hidden="true" /></Button>
         <p className="drive-menu-hint">WASD or arrows to drive · C camera · Esc pause</p>
       </section>
